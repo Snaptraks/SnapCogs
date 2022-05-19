@@ -47,7 +47,7 @@ Context menus (right click) are indicated as ``User | Member > command_name`` or
 
 ### Admin
 
-**The cog has a bot owner check.**
+**The cog has a bot owner check. Only the bot owner(s) can use these commands.**
 
 > **\>** ``sync [guilds]... ["~" or None]``
 >
