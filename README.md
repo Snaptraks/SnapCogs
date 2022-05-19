@@ -1,4 +1,15 @@
-# SnapCogs: A collection of Cogs for discord.py bots
+<h1 align="center">
+<sub>
+    <img src=".github/assets/SnapCogs.png" height="64">
+</sub>
+&nbsp;
+SnapCogs
+</h1>
+<p align="center">
+    A collection of Cogs for discord.py bots
+</p>
+
+<!-- # SnapCogs: A collection of Cogs for discord.py bots -->
 
 This project is a collection of general-use modules, called Cogs, for discord bots written with the discord.py v2.0 Python library.
 
@@ -74,9 +85,15 @@ Context menus (right click) are indicated as ``User | Member > command_name`` or
 >
 > Shortcut for a single-choice poll with the options filled in with Yes or No automatically.
 
-### Used by
+## Used by
 - [Zenyatta][zenyatta]: Bot for a single private server
 - [PhysBot][physbot]: Bot for the PHYSUM Discord server
 
+## Acknowledgements
+
+The SnapCogs logo was created using the [Unicorn icon created by rddrt - Flaticons][unicorn] and the [Development icons created by Smashicons - Flaticon][cog]
+
 [zenyatta]: https://github.com/Snaptraks/Zenyatta
 [physbot]: https://github.com/Snaptraks/physbot
+[unicorn]: https://www.flaticon.com/free-icons/unicorn
+[cog]: https://www.flaticon.com/free-icons/development
