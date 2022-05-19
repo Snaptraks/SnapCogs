@@ -1,3 +1,2 @@
-include *.dat
-include *.png
-include *.gif
+global-include *.png
+global-include *.gif
