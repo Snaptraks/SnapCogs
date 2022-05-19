@@ -1,0 +1,3 @@
+discord.py>=1.7.3  # because 2.0 isn't released yet
+matplotlib==3.5.2
+Pillow==9.1.0
