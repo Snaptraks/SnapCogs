@@ -15,6 +15,9 @@ This project is a collection of general-use modules, called Cogs, for discord bo
 
 ## Installation
 
+:warning: **Important Note: These cogs are written with discord.py >= 2.0 in mind, which is still unreleased.
+While the work continues to be done on the library, you will need to install it manually from github with ``pip install -U git+https://github.com/Rapptz/discord.py.git`` for the time being.**
+
 To install the modules, you can install them directly from the repository's master branch:
 
 ```
