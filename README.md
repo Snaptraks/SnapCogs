@@ -1,15 +1,14 @@
 <h1 align="center">
-<sub>
-    <img src=".github/assets/SnapCogs.png" height="64">
-</sub>
-&nbsp;
+<p>
+    <img src=".github/assets/SnapCogs.png" height="124">
+</p>
+<p>
 SnapCogs
+</p>
 </h1>
 <p align="center">
     A collection of Cogs for discord.py bots
 </p>
-
-<!-- # SnapCogs: A collection of Cogs for discord.py bots -->
 
 This project is a collection of general-use modules, called Cogs, for discord bots written with the discord.py v2.0 Python library.
 
