@@ -176,8 +176,8 @@ setup(
     # what's used to render the link text on PyPI.
     project_urls={  # Optional
         "Bug Reports": "https://github.com/Snaptraks/SnapCogs/issues",
-        "Funding": "https://donate.pypi.org",
-        "Say Thanks!": "http://saythanks.io/to/example",
+        # "Funding": "https://donate.pypi.org",
+        # "Say Thanks!": "http://saythanks.io/to/example",
         "Source": "https://github.com/Snaptraks/SnapCogs/",
     },
 )
