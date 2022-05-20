@@ -1,1 +1,1 @@
-from snapcogs.bot import Bot
+from snapcogs.bot import Bot  # noqa: F401
