@@ -50,9 +50,12 @@ class Bot(commands.Bot):
     async def on_ready(self):
         oauth_url = discord.utils.oauth_url(self.user.id, permissions=self.permissions)
         LOGGER.info(
-            f"\nLogged in as {self.user.name} (ID:{self.user.id})\n"
+            f"Logged in as {self.user.name} | discord.py version {discord.__version__}"
+        )
+        print(
+            f"Logged in as {self.user.name} (ID:{self.user.id})\n"
             "--------\n"
-            f"Current Discord.py Version: {discord.__version__}\n"
+            f"Current discord.py version: {discord.__version__}\n"
             "--------\n"
             f"Use this link to invite {self.user.name}:\n"
             f"{oauth_url}\n"
