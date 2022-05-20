@@ -10,7 +10,7 @@ SnapCogs
     A collection of Cogs for discord.py bots
 </p>
 
-This project is a collection of general-use modules, called Cogs, for discord bots written with the discord.py v2.0 Python library.
+This project is a collection of general-use modules, called Cogs, for discord bots written with the [discord.py][dpy] v2.0 Python library.
 
 ## Installation
 
@@ -139,6 +139,7 @@ Context menus (right click) are indicated as ``User | Member > command_name`` or
 
 The SnapCogs logo was created using the [Unicorn icon created by rddrt - Flaticons][unicorn] and the [Development icons created by Smashicons - Flaticon][cog]
 
+[dpy]: https://github.com/Rapptz/discord.py
 [zenyatta]: https://github.com/Snaptraks/Zenyatta
 [physbot]: https://github.com/Snaptraks/physbot
 [unicorn]: https://www.flaticon.com/free-icons/unicorn
