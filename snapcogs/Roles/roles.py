@@ -1,7 +1,7 @@
 from typing import Union
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 from . import views
 
 
@@ -21,15 +21,10 @@ class RolesAddRemoveFlags(commands.FlagConverter):
 class Roles(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.persistent_views_added = False
-        self._create_tables.start()
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        if not self.persistent_views_added:
-
-            await self.load_persistent_views()
-            self.persistent_views_added = True
+    async def cog_load(self):
+        await self._create_tables()
+        await self.load_persistent_views()
 
     @commands.has_guild_permissions(manage_roles=True)
     @commands.group(aliases=["role"])
@@ -245,7 +240,6 @@ class Roles(commands.Cog):
 
         return view
 
-    @tasks.loop(count=1)
     async def _create_tables(self):
         await self.bot.db.execute(
             """
