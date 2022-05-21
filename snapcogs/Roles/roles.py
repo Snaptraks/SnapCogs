@@ -21,10 +21,16 @@ class RolesAddRemoveFlags(commands.FlagConverter):
 class Roles(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.persistent_views_loaded = False
 
     async def cog_load(self):
         await self._create_tables()
-        await self.load_persistent_views()
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        if not self.persistent_views_loaded:
+            await self.load_persistent_views()  # needs guild data, so we load this here
+            self.persistent_views_loaded = True
 
     @commands.has_guild_permissions(manage_roles=True)
     @commands.group(aliases=["role"])
