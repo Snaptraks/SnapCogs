@@ -55,7 +55,7 @@ class Roles(commands.Cog):
         Ex: roles select roles: @Role1 @Role2 message: Select some roles!
             channel: #general
         """
-        view = views.RolesView(flags.roles)
+        view = views.RolesView(flags.roles, toggle=False)
         message = await flags.channel.send(flags.content, view=view)
         await self.save_persistent_view(view, message)
 
@@ -75,7 +75,7 @@ class Roles(commands.Cog):
             channel: #general
         """
 
-        view = views.RolesToggleView(flags.roles)
+        view = views.RolesView(flags.roles, toggle=True)
         message = await flags.channel.send(flags.content, view=view)
         await self.save_persistent_view(view, message)
 
@@ -203,12 +203,9 @@ class Roles(commands.Cog):
             )
 
     async def save_persistent_view(self, view, message):
-        view_payload = dict(guild_id=message.guild.id, message_id=message.id)
-
-        if isinstance(view, views.RolesView):
-            view_payload["view_type"] = "select"
-        elif isinstance(view, views.RolesToggleView):
-            view_payload["view_type"] = "toggle"
+        view_payload = dict(
+            guild_id=message.guild.id, message_id=message.id, toggle=view.toggle
+        )
 
         view_id = await self._save_view(view_payload)
 
@@ -236,13 +233,9 @@ class Roles(commands.Cog):
             for row in await self._get_components(view_data["view_id"])
         }
 
-        if view_data["view_type"] == "select":
-            view_type = views.RolesView
+        toggle = view_data["toggle"]
 
-        elif view_data["view_type"] == "toggle":
-            view_type = views.RolesToggleView
-
-        view = view_type(roles, components_id=components_id)
+        view = views.RolesView(roles, toggle=toggle, components_id=components_id)
 
         return view
 
@@ -252,8 +245,8 @@ class Roles(commands.Cog):
             CREATE TABLE IF NOT EXISTS roles_view(
                 guild_id   INTEGER NOT NULL,
                 message_id INTEGER NOT NULL UNIQUE,
-                view_id    INTEGER NOT NULL PRIMARY KEY,
-                view_type  TEXT    NOT NULL
+                toggle     BOOLEAN NOT NULL,
+                view_id    INTEGER NOT NULL PRIMARY KEY
             )
             """
         )
@@ -290,19 +283,6 @@ class Roles(commands.Cog):
               FROM roles_view
             """
         )
-
-    async def _get_view_from_id(self, view_id):
-        async with self.bot.db.execute(
-            """
-            SELECT *
-              FROM roles_view
-             WHERE view_id=:message_id
-            """,
-            dict(message_id=view_id),
-        ) as c:
-            row = await c.fetchone()
-
-        return row
 
     async def _get_view_from_message(self, message):
         async with self.bot.db.execute(
@@ -342,10 +322,10 @@ class Roles(commands.Cog):
             """
             INSERT INTO roles_view(guild_id,
                                    message_id,
-                                   view_type)
+                                   toggle)
             VALUES (:guild_id,
                     :message_id,
-                    :view_type)
+                    :toggle)
             """,
             payload,
         )
