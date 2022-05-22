@@ -27,6 +27,11 @@ class Bot(commands.Bot):
         self.db = await aiosqlite.connect(self.db_name, detect_types=1)
         # allow for name-based access of data columns
         self.db.row_factory = aiosqlite.Row
+        # register boolean type for database
+        aiosqlite.register_adapter(bool, int)
+        aiosqlite.register_converter("BOOLEAN", lambda v: bool(int(v)))
+        # allow for cascade deletion
+        await self.db.execute("PRAGMA foreign_keys = ON")
 
         for extension in self.startup_extensions:
             try:
