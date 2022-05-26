@@ -9,13 +9,49 @@ from discord.ui import View, Button, Select, Item
 LOGGER = logging.getLogger(__name__)
 
 
+class RolesCreateSelect(Select):
+    """Select menu to select which roles will be available to select in the message."""
+
+    def __init__(self, roles: list[discord.Role]):
+        options = [discord.SelectOption(label=role.name) for role in roles]
+        self._roles = roles
+        super().__init__(
+            placeholder="Select roles from the available list.",
+            options=options,
+            max_values=len(options),
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        self.view.selected_roles = sorted(
+            [discord.utils.get(self._roles, name=value) for value in self.values],
+            reverse=True,
+        )
+        await interaction.response.defer()
+        self.view.stop()
+
+
+class RolesCreateView(View):
+    """View sent to create a roles selection menu for members."""
+
+    def __init__(self, roles: list[discord.Role], *, author: discord.Member):
+        super().__init__()
+        self.author = author
+        select = RolesCreateSelect(roles)
+        self.add_item(select)
+
+    async def interaction_check(self, interaction: discord.Interaction):
+        """Only the command author can use the View."""
+
+        return interaction.user == self.author
+
+
 class RolesSelect(Select):
     placeholder = "Select roles"
 
     def __init__(self, roles, *, toggle: bool, custom_id: str):
+        roles = sorted(roles, reverse=True)
         options = [discord.SelectOption(label=role.name) for role in roles]
         self._roles = roles
-        self._id_map = {role.name: role.id for role in roles}
         super().__init__(
             placeholder=self.placeholder,
             options=options,
@@ -24,10 +60,12 @@ class RolesSelect(Select):
         )
 
     async def callback(self, interaction: discord.Interaction):
-        guild = interaction.guild
+        # guild = interaction.guild
         member = interaction.user
 
-        selected_roles = [guild.get_role(self._id_map[name]) for name in self.values]
+        selected_roles = [
+            discord.utils.get(self._roles, name=value) for value in self.values
+        ]
         added_roles = [role for role in selected_roles if role not in member.roles]
         removed_roles = [
             role
@@ -48,7 +86,13 @@ class RolesSelect(Select):
             await member.add_roles(*added_roles)
 
         await interaction.response.send_message(
-            f"Setting your roles to {', '.join(r.name for r in selected_roles)}.",
+            embed=discord.Embed(
+                title=(
+                    "Setting your roles to "
+                    f"{', '.join(r.name for r in selected_roles)}."
+                ),
+                color=discord.Color.green(),
+            ),
             ephemeral=True,
         )
 
