@@ -13,19 +13,6 @@ from ..utils.errors import TransformerMessageNotFound, TransformerNotBotMessage
 LOGGER = logging.getLogger(__name__)
 
 
-class RolesCreateFlags(commands.FlagConverter):
-    channel: discord.TextChannel = commands.flag(default=lambda ctx: ctx.channel)
-    content: str = commands.flag(
-        default="Select from the following roles:", aliases=["message"]
-    )
-    roles: tuple[discord.Role, ...]  # able to add more than one with the flag
-
-
-class RolesAddRemoveFlags(commands.FlagConverter):
-    message: Union[discord.Message, discord.PartialMessage]
-    roles: tuple[discord.Role, ...]  # able to add more than one with the flag
-
-
 class Roles(commands.Cog):
     roles = app_commands.Group(
         name="roles", description="Create a roles selection menu"
