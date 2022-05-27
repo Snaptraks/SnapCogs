@@ -1,6 +1,5 @@
 import logging
 import traceback
-from typing import Union
 
 import discord
 from discord import app_commands
