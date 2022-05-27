@@ -131,6 +131,35 @@ Context menus (right click) are indicated as ``User | Member > command_name`` or
 >
 > Shortcut for a single-choice poll with the options filled in with Yes or No automatically.
 
+### Roles
+
+> **\>** ``/roles select [channel] [content]``
+>
+> Create a role selection menu, to select many roles from the list. By defaut, send the menu in the current channel, but can be specified with the ``channel`` argument. The ``content`` of the message can also be specified, and will show above the selection menu.
+
+> **\>** ``/roles toggle [channel] [content]``
+>
+> Create a role selection menu, to select **one** role from the list. By defaut, send the menu in the current channel, but can be specified with the ``channel`` argument. The ``content`` of the message can also be specified, and will show above the selection menu.
+
+> **\>** ``/roles add <message>``
+>
+> Add a role to the selection menu. You need to specify the message by either it's ID (123456789123456789), combo <channel ID>-<message ID> (Shift + Copy ID), or jump url (Copy Message Link).
+
+> **\>** ``/roles remove <message>``
+>
+> Remove a role to the selection menu. You need to specify the message in the same way as mentionned above.
+
+> **\>** ``/roles edit <message> <content>``
+>
+> Edit the content of a role selection menu message. YYou need to specify the message in the same way as mentionned above.
+
+> **\>** ``/roles delete <message>``
+>
+> Delete a role selection menu message. This way ensures that the data is also deleted from the bot. You need to specify the message in the same way as mentionned above.
+
+Example of a roles selection menu:
+![roles example](.github/assets/roles_example.png)
+
 ## Used by
 - [Zenyatta][zenyatta]: Bot for a single private server
 - [PhysBot][physbot]: Bot for the PHYSUM Discord server
