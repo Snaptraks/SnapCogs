@@ -158,6 +158,7 @@ Context menus (right click) are indicated as ``User | Member > command_name`` or
 > Delete a role selection menu message. This way ensures that the data is also deleted from the bot. You need to specify the message in the same way as mentionned above.
 
 Example of a roles selection menu:
+
 ![roles example](.github/assets/roles_example.png)
 
 ## Used by
