@@ -131,6 +131,10 @@ Context menus (right click) are indicated as ``User | Member > command_name`` or
 >
 > Shortcut for a single-choice poll with the options filled in with Yes or No automatically.
 
+Example of a poll:
+
+![poll example](.github/assets/poll_example.png)
+
 ### Roles
 
 > **\>** ``/roles select [channel] [content]``
