@@ -20,6 +20,7 @@ class Fun(commands.Cog):
             name="Bonk", callback=self._bonk_context_menu,
         )
         self.bot.tree.add_command(self.bonk_context_menu)
+
         self.lick_context_menu = app_commands.ContextMenu(
             name="Lick", callback=self._lick_context_menu,
         )
