@@ -142,5 +142,5 @@ class Information(commands.Cog):
         quantity = UREG.Quantity(value, from_)
 
         await interaction.response.send_message(
-            f"You converted `{quantity}` to `{quantity.to(to)}`"
+            f"You converted `{quantity}` to `{quantity.to(to):.3g}`"
         )
