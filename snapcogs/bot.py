@@ -1,4 +1,5 @@
 import logging
+import traceback
 
 import aiosqlite
 import aiohttp
@@ -40,6 +41,7 @@ class Bot(commands.Bot):
             except Exception as e:
                 exc = "{}: {}".format(type(e).__name__, e)
                 LOGGER.error("Failed to load {}\n{}".format(extension, exc))
+                LOGGER.debug(traceback.format_exc())
             else:
                 LOGGER.debug(f"{extension} loaded successfully.")
 
