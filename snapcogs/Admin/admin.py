@@ -28,7 +28,7 @@ class Admin(commands.Cog):
             else:
                 fmt = await ctx.bot.tree.sync()
 
-            await ctx.send(
+            await ctx.reply(
                 f"Synced {len(fmt)} commands "
                 f"{'globally' if spec is None else 'to the current guild.'}"
             )
@@ -62,7 +62,7 @@ class Admin(commands.Cog):
                 ctx.bot.tree.clear_commands(guild=None)
                 await ctx.bot.tree.sync()
 
-            await ctx.send(
+            await ctx.reply(
                 f"Cleared commands "
                 f"{'globally' if spec is None else 'in the current guild.'}"
             )
