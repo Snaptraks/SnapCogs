@@ -7,6 +7,8 @@ from discord import app_commands
 from discord.ext import commands
 import pint
 
+from ..utils import relative_dt
+
 
 UREG = pint.UnitRegistry()
 UREG.default_system = None
@@ -52,14 +54,92 @@ async def to_units_autocomplete(
     return choice_units
 
 
+class Badge:
+    """From https://github.com/python-discord/bot/blob/80a5b83f4fb0fd1204e051954a3c1b1b914fe7bc/config-default.yml#L43-L53"""  # noqa: E501
+
+    bug_hunter = "<:bug_hunter_lvl1:743882896372269137>"
+    bug_hunter_level_2 = "<:bug_hunter_lvl2:743882896611344505>"
+    early_supporter = "<:early_supporter:743882896909140058>"
+    hypesquad = "<:hypesquad_events:743882896892362873>"
+    hypesquad_balance = "<:hypesquad_balance:743882896460480625>"
+    hypesquad_bravery = "<:hypesquad_bravery:743882896745693335>"
+    hypesquad_brilliance = "<:hypesquad_brilliance:743882896938631248>"
+    partner = "<:partner:748666453242413136>"
+    staff = "<:discord_staff:743882896498098226>"
+    verified_bot_developer = "<:verified_bot_dev:743882897299210310>"
+
+
 class Information(commands.Cog):
     # bot info (about)
     # guild info
-    # user / member info
-    # user / member avatar
     # timestamps?
 
     # tips commands (or move to own module)
+
+    info = app_commands.Group(
+        name="info", description="Get information about something"
+    )
+
+    def __init__(self, bot):
+        self.bot = bot
+
+        self.info_user_context_menu = app_commands.ContextMenu(
+            name="Info", callback=self.info_user_callback,
+        )
+        self.bot.tree.add_command(self.info_user_context_menu)
+
+    @info.command(name="user")
+    @app_commands.describe(user="User or member to get the information of")
+    async def info_user(
+        self,
+        interaction: discord.Interaction,
+        user: Union[discord.Member, discord.User],
+    ):
+        """View information about a user / member."""
+
+        await self.info_user_callback(interaction, user)
+
+    async def info_user_callback(
+        self,
+        interaction: discord.Interaction,
+        user: Union[discord.Member, discord.User],
+    ):
+        """Send the information about the requested user / member."""
+
+        badges = []
+        for badge, is_set in user.public_flags:
+            if is_set and (emoji := getattr(Badge, badge, None)):
+                badges.append(emoji)
+
+        embed = (
+            discord.Embed(
+                title=f"{user}", description=" ".join(badges), color=user.color
+            )
+            .add_field(
+                name="User information",
+                value=(
+                    f"Created: {relative_dt(user.created_at)}\n"
+                    f"Profile: {user.mention}\n"
+                    f"ID: {user.id}"
+                ),
+                inline=False,
+            )
+            .set_thumbnail(url=user.avatar.url)
+        )
+
+        if isinstance(user, discord.Member):
+            # we have more information here
+            embed.title = f"{user.display_name} ({user})"
+            embed.add_field(
+                name="Member information",
+                value=(
+                    f"Joined: {relative_dt(user.joined_at)}\n"
+                    f"Roles: {', '.join(r.mention for r in reversed(user.roles[1:]))}"
+                ),
+                inline=False,
+            )
+
+        await interaction.response.send_message(embed=embed)
 
     @app_commands.command()
     @app_commands.describe(
