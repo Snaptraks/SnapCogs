@@ -88,6 +88,44 @@ class Information(commands.Cog):
         )
         self.bot.tree.add_command(self.info_user_context_menu)
 
+    @info.command(name="server")
+    async def info_guild(self, interaction: discord.Interaction):
+        """Get information about the current server."""
+
+        guild = interaction.guild
+        embed = discord.Embed(title=guild.name, color=discord.Color.blurple())
+        description = f"Server created {relative_dt(guild.created_at)}."
+        if guild.description:
+            description = f"{guild.description}\n{description}"
+        embed.description = description
+
+        if guild.icon:
+            thumbnail_url = guild.icon.url
+        else:
+            thumbnail_url = "https://cdn.discordapp.com/embed/avatars/1.png"
+        embed.set_thumbnail(url=thumbnail_url)
+
+        embed.add_field(
+            name="Members Info",
+            value=(f"Members: {guild.member_count}\n" f"Roles: {len(guild.roles)-1}\n"),
+        ).add_field(
+            name="Boosts",
+            value=(
+                f"Nitro Boosters: {len(guild.premium_subscribers)}\n"
+                f"Nitro Boosts: {guild.premium_subscription_count}\n"
+                f"Nitro level: {guild.premium_tier}\n"
+            ),
+        ).add_field(
+            name="Channels",
+            value=(
+                f"`{len(guild.text_channels):>3d}` Text Channels\n"
+                f"`{len(guild.voice_channels):>3d}` Voice Channels\n"
+                f"`{len(guild.stage_channels):>3d}` Stage Channels\n"
+            ),
+        )
+
+        await interaction.response.send_message(embed=embed)
+
     @info.command(name="user")
     @app_commands.describe(user="User or member to get the information of")
     async def info_user(
