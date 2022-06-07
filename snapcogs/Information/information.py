@@ -260,7 +260,7 @@ class Information(commands.Cog):
         characters="Characters to get the unicode representation of.",
     )
     async def charinfo(self, interaction: discord.Interaction, characters: str):
-        """Shows you information on up to 25 unicode characters.
+        """Show information on up to 25 unicode characters.
 
         Adapted from
         https://github.com/python-discord/bot/blob/master/bot/cogs/utils.py
