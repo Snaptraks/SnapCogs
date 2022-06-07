@@ -74,10 +74,7 @@ class Badge:
 
 
 class Information(commands.Cog):
-    # bot info (about)
     # timestamps?
-
-    # tips commands (or move to own module)
 
     info = app_commands.Group(
         name="info", description="Get information about something"
