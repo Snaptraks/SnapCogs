@@ -117,6 +117,32 @@ Context menus (right click) are indicated as ``User | Member > command_name`` or
 >
 > Member context menu that overlays the member's profile picture with a lick gif.
 
+### Information
+
+> **\>** ``/about``
+>
+> View information about the bot itself. This includes servers statistics, and possible link to the bot's repository.
+
+> **\>** ``/info server``
+>
+> View information about the current server. This include members and channels statistics.
+
+> **\>** ``/info user <user>``
+>
+> View information about a user / member. This includes individual user data such as their ID and account creation date, and possibly server join date and roles (if used in a server context).
+
+> **\>** ``Member > Info``
+>
+> Member context menu sinilar to the ``/info user`` command.
+
+> **\>** ``/charinfo <characters>``
+>
+> Show information on up to 25 unicode characters. This includes unicode endpoints and string literals.
+
+> **\>** ``/convert <value> <from> <to>``
+>
+> Convert a value from one unit to another. The `from` and `to` parameters have autocomplete enabled, suggesting different units as you are typing, according to dimentionality (either the units are of length, mass, time, etc.).
+
 ### Poll
 
 > **\>** ``/poll single``
