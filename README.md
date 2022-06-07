@@ -191,6 +191,34 @@ Example of a roles selection menu:
 
 ![roles example](.github/assets/roles_example.png)
 
+### utils
+
+The ``snapcog.utils`` package is not a Cog, but rather a collection of useful objects and functions, some necessary for the rest of the package. The following are therefore not application commands, context menus, nor text commands.
+
+> ``snapcog.utils.relative_dt(dt: datetime.datetime) -> str``
+>
+> A shortcut for ``discord.utils.format_dt(dt, style="R")`` used here.
+
+> ``await snapcog.utils.run_process(command: str) -> tuple[str]``
+>
+> Run a command in shell. This then returns the `stdout` and `stderr` inside a tuple. This is potentially dangerous, so be careful how you use it!
+
+#### Transformers
+
+> ``snapcogs.utils.transformers.MessageTransformer`` and ``BotMessageTransformer``
+>
+> Application command transformers that converts an argument to a `discord.Message`. The `Bot` version ensures that the message's author was the bot itself.
+
+#### Errors
+
+> ``snapcogs.utils.errors.TransformerMessageNotFound``
+>
+> Exception raised by `MessageTransformer` when the message could not be found.
+
+> ``snapcogs.utils.errors.TransformerNotBotMessage``
+>
+> Exception raised by `BotMessageTransformer` when the provided message was not sent by the bot.
+
 ## Used by
 - [Zenyatta][zenyatta]: Bot for a single private server
 - [PhysBot][physbot]: Bot for the PHYSUM Discord server
