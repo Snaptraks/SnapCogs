@@ -1,5 +1,8 @@
+import asyncio
 import io
+import json
 from pathlib import Path
+import random
 
 import discord
 from discord import app_commands
@@ -25,6 +28,45 @@ class Fun(commands.Cog):
             name="Lick", callback=self._lick_context_menu,
         )
         self.bot.tree.add_command(self.lick_context_menu)
+
+    @app_commands.command(name="8ball")
+    @app_commands.describe(question="The question to ask the Magic 8 Ball.")
+    async def _8ball(self, interaction: discord.Interaction, question: str):
+        """Fortune-telling or advice seeking."""
+
+        embed = discord.Embed(title="Ask the Magic 8 Ball").set_thumbnail(
+            url="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/twitter/322/pool-8-ball_1f3b1.png"  # noqa: E501
+        )
+
+        await interaction.response.defer(thinking=True)
+
+        r = random.randrange(50)
+        if r != 0:
+            with open(COG_PATH / "8ball_answers.json", "r") as f:
+                answers = json.load(f)
+            _question = tuple(sorted(question))
+            i = hash(_question) % len(answers)
+            answer = answers[i]
+
+            embed.description = f"> {question}\n\n**{answer}**"
+
+            await asyncio.sleep(1.5)
+            await interaction.followup.send(embed=embed)
+
+        else:
+            # sends a fun picture!
+            avatar = io.BytesIO(await interaction.user.display_avatar.read())
+
+            # Edit template with avatar
+            bytes = await self.bot.loop.run_in_executor(
+                None, self._assemble_8ball_image, avatar
+            )
+
+            file = discord.File(bytes, filename="8ball.png")
+            embed.set_image(url=f"attachment://{file.filename}")
+            embed.description = f"> {question}"
+
+            await interaction.followup.send(embed=embed, file=file)
 
     @commands.hybrid_command(name="bonk")
     @app_commands.describe(member="Member to bonk", text="Text to add to the image")
@@ -67,6 +109,40 @@ class Fun(commands.Cog):
         )
         return discord.File(bytes, filename="bonk.png")
 
+    async def _lick_context_menu(
+        self, interaction: discord.Interaction, member: discord.Member
+    ):
+        bytes = await self.bot.loop.run_in_executor(
+            None,
+            self._assemble_lick_gif,
+            io.BytesIO(await member.display_avatar.read()),
+        )
+
+        file = discord.File(bytes, filename="lick.gif")
+
+        await interaction.response.send_message(file=file)
+
+    def _assemble_8ball_image(self, avatar_bytes):
+        # needed files
+        avatar = Image.open(avatar_bytes)
+        template = Image.open(COG_PATH / "8ball_filter.png")
+        new = Image.new("RGBA", template.size)
+
+        # big profile picture
+        big = avatar.resize((375, 375), Image.ANTIALIAS)
+        new.paste(big, (349, 70))
+
+        # small profile picture
+        small = avatar.resize((204, 204), Image.ANTIALIAS)
+        new.paste(small, (105, 301))
+
+        new.paste(template, mask=template)
+        bytes = io.BytesIO()
+        new.save(bytes, format="png")
+        bytes.seek(0)
+
+        return bytes
+
     def _assemble_bonk_image(self, avatar_bytes, text=None):
         avatar = Image.open(avatar_bytes)
         template = Image.open(COG_PATH / "bonk_template.png")
@@ -102,19 +178,6 @@ class Fun(commands.Cog):
         edited.seek(0)
 
         return edited
-
-    async def _lick_context_menu(
-        self, interaction: discord.Interaction, member: discord.Member
-    ):
-        bytes = await self.bot.loop.run_in_executor(
-            None,
-            self._assemble_lick_gif,
-            io.BytesIO(await member.display_avatar.read()),
-        )
-
-        file = discord.File(bytes, filename="lick.gif")
-
-        await interaction.response.send_message(file=file)
 
     def _assemble_lick_gif(self, avatar_bytes):
         avatar = Image.open(avatar_bytes)
