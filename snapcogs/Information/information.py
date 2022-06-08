@@ -148,9 +148,9 @@ class Information(commands.Cog):
         embed.add_field(
             name="Timeline",
             value=(
-                f"Boot time: {relative_dt(self.bot.boot_time)}\n"
                 f"Created: {relative_dt(self.bot.user.created_at)}\n"
-                f"Joined server: {relative_dt(interaction.guild.me.joined_at)}"
+                f"Joined server: {relative_dt(interaction.guild.me.joined_at)}\n"
+                f"Boot time: {relative_dt(self.bot.boot_time)}"
             ),
         )
 
