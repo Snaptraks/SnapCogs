@@ -103,6 +103,16 @@ Context menus (right click) are indicated as ``User | Member > command_name`` or
 >
 > Clear AppCommands of the provided guilds or globally if none are passed, or of the current guild if "~" is passed instead.
 
+> **\>** ``repl``
+>
+> Launch an interactive REPL session. A Read-Eval-Print-Loop allows you to run code interactively. This is a possibly very dangerous command, so be careful who can use it! For ease of use, some variables are defined automatically:
+>  - `ctx`: ctx
+>  - `bot`: ctx.bot
+>  - `message`: ctx.message
+>  - `guild`: ctx.guild
+>  - `channel`: ctx.channel
+>  - `author`: ctx.author
+
 ### Fun
 
 > **\>** ``/8ball <question>``
@@ -177,7 +187,7 @@ Example of a poll:
 
 > **\>** ``/roles add <message>``
 >
-> Add a role to the selection menu. You need to specify the message by either it's ID (123456789123456789), combo <channel ID>-<message ID> (Shift + Copy ID), or jump url (Copy Message Link).
+> Add a role to the selection menu. You need to specify the message by either it's ID (123456789123456789), combo \<channel ID>-\<message ID> (Shift + Copy ID), or jump url (Copy Message Link).
 
 > **\>** ``/roles remove <message>``
 >
