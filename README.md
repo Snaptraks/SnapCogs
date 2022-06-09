@@ -105,6 +105,10 @@ Context menus (right click) are indicated as ``User | Member > command_name`` or
 
 ### Fun
 
+> **\>** ``/8ball <question>``
+>
+> Fortune-telling or advice seeking. Ask the Magic 8 Ball a yes-or-no question.
+
 > **\>** ``/bonk <member> [text=None]``
 >
 > Bonk a member, and add a message! This command creates an image with the member's profile picture and the bonk meme. This doubles as a ``commands.Command``, although the "slash" syntax is prefered.
