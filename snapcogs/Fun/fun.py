@@ -30,7 +30,7 @@ class Fun(commands.Cog):
         self.bot.tree.add_command(self.lick_context_menu)
 
     @app_commands.command(name="8ball")
-    @app_commands.describe(question="The question to ask the Magic 8 Ball.")
+    @app_commands.describe(question="What do you want to ask the Magic 8 Ball?")
     async def _8ball(self, interaction: discord.Interaction, question: str):
         """Fortune-telling or advice seeking."""
 
