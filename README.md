@@ -117,7 +117,7 @@ Context menus (right click) are indicated as ``User | Member > command_name`` or
 
 > **\>** ``/8ball <question>``
 >
-> Fortune-telling or advice seeking. Ask the Magic 8 Ball a yes-or-no question.
+> Fortune-telling or advice seeking. Ask the Magic 8 Ball a yes-or-no question, and maybe it will answer!
 
 > **\>** ``/bonk <member> [text=None]``
 >
