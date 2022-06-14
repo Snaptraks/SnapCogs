@@ -48,6 +48,7 @@ class Tips(commands.Cog):
             content=modal.content.value,
             created_at=interaction.created_at,
             guild_id=interaction.guild.id,
+            last_edited=interaction.created_at,
             name=modal.name.value,
         )
 
@@ -68,16 +69,12 @@ class Tips(commands.Cog):
             return
 
         tip_author = interaction.guild.get_member(tip["author_id"])
-        embed = (
-            discord.Embed(
-                title=f"Tip {tip['name']}",
-                description=tip["content"],
-                color=discord.Color.blurple(),
-                timestamp=tip["created_at"],
-            )
-            .set_author(name=tip_author, icon_url=tip_author.display_avatar.url)
-            .set_footer(text=f"Tip used {tip['uses'] + 1} times")
-        )
+        embed = discord.Embed(
+            title=f"Tip {tip['name']}",
+            description=tip["content"],
+            color=discord.Color.blurple(),
+            timestamp=tip["last_edited"],
+        ).set_author(name=tip_author, icon_url=tip_author.display_avatar.url)
 
         await interaction.response.send_message(embed=embed)
 
@@ -89,13 +86,14 @@ class Tips(commands.Cog):
         await self.bot.db.execute(
             """
             CREATE TABLE IF NOT EXISTS tips_tip(
-                author_id  INTEGER  NOT NULL,
-                content    TEXT     NOT NULL,
-                created_at DATETIME NOT NULL,
-                guild_id   INTEGER  NOT NULL,
-                name       TEXT     NOT NULL,
-                tip_id     INTEGER  NOT NULL PRIMARY KEY,
-                uses       INTEGER  DEFAULT 0 NOT NULL
+                author_id   INTEGER  NOT NULL,
+                content     TEXT     NOT NULL,
+                created_at  DATETIME NOT NULL,
+                guild_id    INTEGER  NOT NULL,
+                last_edited DATETIME NOT NULL,
+                name        TEXT     NOT NULL,
+                tip_id      INTEGER  NOT NULL PRIMARY KEY,
+                uses        INTEGER  DEFAULT 0 NOT NULL
             )
             """,
         )
@@ -110,11 +108,13 @@ class Tips(commands.Cog):
                                  content, 
                                  created_at, 
                                  guild_id, 
+                                 last_edited,
                                  name)
             VALUES (:author_id,
                     :content,
                     :created_at,
                     :guild_id,
+                    :last_edited,
                     :name)
             """,
             payload,
