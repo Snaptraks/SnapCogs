@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 import traceback
 
@@ -36,6 +37,12 @@ class Bot(commands.Bot):
         # register boolean type for database
         aiosqlite.register_adapter(bool, int)
         aiosqlite.register_converter("BOOLEAN", lambda v: bool(int(v)))
+        # register aware datetime type for database
+        aiosqlite.register_adapter("DATETIME", lambda dt: dt.isoformat)
+        aiosqlite.register_converter("DATETIME", datetime.fromisoformat)
+        aiosqlite.register_converter(
+            "TIMESTAMP", lambda s: datetime.fromisoformat(s.decode())
+        )
         # allow for cascade deletion
         await self.db.execute("PRAGMA foreign_keys = ON")
 
