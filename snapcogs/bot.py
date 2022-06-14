@@ -19,6 +19,10 @@ LOG_HANDLER.setFormatter(LOG_FORMAT)
 LOGGER.addHandler(LOG_HANDLER)
 
 
+def _decode_dt(s):
+    return datetime.fromisoformat(s.decode())
+
+
 class Bot(commands.Bot):
     def __init__(self, *args, **kwargs):
         self.db_name = kwargs.get("db_name", ":memory:")
@@ -39,10 +43,8 @@ class Bot(commands.Bot):
         aiosqlite.register_converter("BOOLEAN", lambda v: bool(int(v)))
         # register aware datetime type for database
         aiosqlite.register_adapter("DATETIME", lambda dt: dt.isoformat)
-        aiosqlite.register_converter("DATETIME", datetime.fromisoformat)
-        aiosqlite.register_converter(
-            "TIMESTAMP", lambda s: datetime.fromisoformat(s.decode())
-        )
+        aiosqlite.register_converter("DATETIME", _decode_dt)
+        aiosqlite.register_converter("TIMESTAMP", _decode_dt)
         # allow for cascade deletion
         await self.db.execute("PRAGMA foreign_keys = ON")
 
