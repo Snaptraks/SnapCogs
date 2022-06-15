@@ -6,6 +6,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from . import views
+from ..utils import relative_dt
 
 LOGGER = logging.getLogger(__name__)
 
@@ -81,6 +82,7 @@ class Tips(commands.Cog):
         await self._increase_tip_uses(tip["tip_id"])
 
     @tip.command(name="edit")
+    @app_commands.describe(name="Name of the tip.")
     @app_commands.autocomplete(name=tip_name_autocomplete)
     async def tip_edit(self, interaction: discord.Integration, name: str):
         """Modify the content of a tip that you own."""
@@ -105,6 +107,34 @@ class Tips(commands.Cog):
             tip_id=tip["tip_id"],
         )
         await self._edit_tip(payload)
+
+    @tip.command(name="info")
+    @app_commands.describe(name="Name of the tip.")
+    @app_commands.autocomplete(name=tip_name_autocomplete)
+    async def tip_info(self, interaction: discord.Interaction, name: str):
+        """Get information about a tip."""
+
+        tip = await self._get_tip_by_name(interaction, name)
+
+        if tip is None:
+            await interaction.response.send_message(
+                f"No tip named `{name}` here!", ephemeral=True
+            )
+            return
+
+        tip_author = interaction.guild.get_member(tip["author_id"])
+        embed = (
+            discord.Embed(
+                title=f"Tip {tip['name']} Information", color=discord.Color.blurple(),
+            )
+            .set_author(name=tip_author, icon_url=tip_author.display_avatar.url)
+            .add_field(name="Author", value=tip_author.mention)
+            .add_field(name="Uses", value=tip["uses"])
+            .add_field(name="Created", value=relative_dt(tip["created_at"]))
+            .add_field(name="Last Edited", value=relative_dt(tip["last_edited"]))
+        )
+
+        await interaction.response.send_message(embed=embed)
 
     async def _create_tables(self):
         """Create the necessary database tables."""
