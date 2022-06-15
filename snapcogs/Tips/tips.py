@@ -1,3 +1,4 @@
+from collections import defaultdict
 import logging
 
 import discord
@@ -17,7 +18,7 @@ class Tips(commands.Cog):
     async def tip_name_autocomplete(
         self, interaction: discord.Interaction, current: str
     ):
-        rows = await self._get_tips_names_like(current, interaction.guild)
+        rows = await self._get_tips_names_like(interaction, current)
         suggestions = [
             app_commands.Choice(name=row["name"], value=row["name"])
             for row in rows[:25]
@@ -51,7 +52,6 @@ class Tips(commands.Cog):
             last_edited=interaction.created_at,
             name=modal.name.value,
         )
-
         await self._save_tip(payload)
 
     @tip.command(name="show")
@@ -60,7 +60,7 @@ class Tips(commands.Cog):
     async def tip_show(self, interaction: discord.Interaction, name: str):
         """Show a tip in the current channel."""
 
-        tip = await self._get_tip_by_name(name, interaction.guild)
+        tip = await self._get_tip_by_name(interaction, name)
 
         if tip is None:
             await interaction.response.send_message(
@@ -80,6 +80,32 @@ class Tips(commands.Cog):
 
         await self._increase_tip_uses(tip["tip_id"])
 
+    @tip.command(name="edit")
+    @app_commands.autocomplete(name=tip_name_autocomplete)
+    async def tip_edit(self, interaction: discord.Integration, name: str):
+        """Modify the content of a tip that you own."""
+
+        LOGGER.debug(f"Editing tip {name} in {interaction.guild}")
+        tip = await self._get_member_tip_by_name(interaction, name)
+
+        if tip is None:
+            await interaction.response.send_message(
+                f"No tip named `{name}` here!", ephemeral=True
+            )
+            return
+
+        modal = views.TipEdit(tip)
+        await interaction.response.send_modal(modal)
+        await modal.wait()
+
+        payload = dict(
+            content=modal.content.value,
+            name=modal.name.value,
+            last_edited=interaction.created_at,
+            tip_id=tip["tip_id"],
+        )
+        await self._edit_tip(payload)
+
     async def _create_tables(self):
         """Create the necessary database tables."""
 
@@ -93,7 +119,8 @@ class Tips(commands.Cog):
                 last_edited DATETIME NOT NULL,
                 name        TEXT     NOT NULL,
                 tip_id      INTEGER  NOT NULL PRIMARY KEY,
-                uses        INTEGER  DEFAULT 0 NOT NULL
+                uses        INTEGER  DEFAULT 0 NOT NULL,
+                UNIQUE(guild_id, name)
             )
             """,
         )
@@ -122,7 +149,24 @@ class Tips(commands.Cog):
         await self.bot.db.commit()
         LOGGER.debug(f"Tip {payload['name']} saved.")
 
-    async def _get_tip_by_name(self, name: str, guild: discord.Guild):
+    async def _edit_tip(self, payload):
+        """Edit a tip in the database."""
+
+        await self.bot.db.execute(
+            """
+            UPDATE tips_tip
+               SET author_id=COALESCE(:author_id, author_id),
+                   content=COALESCE(:content, content),
+                   last_edited=COALESCE(:last_edited, last_edited),
+                   name=COALESCE(:name, name)
+             WHERE tip_id=:tip_id
+            """,
+            defaultdict(lambda: None, payload),
+        )
+        await self.bot.db.commit()
+        LOGGER.debug(f"Tip {payload['tip_id']} edited.")
+
+    async def _get_tip_by_name(self, interaction: discord.Interaction, name: str):
         """Get a tip by its name in the current guild."""
 
         async with self.bot.db.execute(
@@ -132,7 +176,7 @@ class Tips(commands.Cog):
              WHERE guild_id=:guild_id
                AND name=:name
             """,
-            dict(guild_id=guild.id, name=name),
+            dict(guild_id=interaction.guild.id, name=name),
         ) as c:
             row = await c.fetchone()
 
@@ -141,7 +185,37 @@ class Tips(commands.Cog):
 
         return row
 
-    async def _get_tips_names_like(self, substring: str, guild: discord.Guild):
+    async def _get_member_tip_by_name(
+        self, interaction: discord.Interaction, name: str
+    ):
+        """Get a tip by its name in the current guild, owned by a given member."""
+
+        async with self.bot.db.execute(
+            """
+            SELECT *
+              FROM tips_tip
+             WHERE author_id=:author_id
+               AND guild_id=:guild_id
+               AND name=:name
+            """,
+            dict(
+                author_id=interaction.user.id, guild_id=interaction.guild.id, name=name
+            ),
+        ) as c:
+            row = await c.fetchone()
+
+        if row:
+            LOGGER.debug(
+                f"Found tip {row['name']} "
+                f"for member {row['author_id']} "
+                f"and guild {row['guild_id']}."
+            )
+
+        return row
+
+    async def _get_tips_names_like(
+        self, interaction: discord.Interaction, substring: str
+    ):
         """Get a list of tip names that contain substring."""
 
         return await self.bot.db.execute_fetchall(
@@ -151,7 +225,7 @@ class Tips(commands.Cog):
              WHERE INSTR(name, :substring) > 0
                AND guild_id=:guild_id
             """,
-            dict(substring=substring, guild_id=guild.id),
+            dict(substring=substring, guild_id=interaction.guild.id),
         )
 
     async def _increase_tip_uses(self, tip_id: int):
