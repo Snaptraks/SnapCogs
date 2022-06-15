@@ -136,6 +136,30 @@ class Tips(commands.Cog):
 
         await interaction.response.send_message(embed=embed)
 
+    @tip.command(name="raw")
+    @app_commands.describe(name="Name of the tip.")
+    @app_commands.autocomplete(name=tip_name_autocomplete)
+    async def tip_raw(self, interaction: discord.Interaction, name: str):
+        """Get the raw content of a tip, excaping markdown."""
+
+        tip = await self._get_tip_by_name(interaction, name)
+
+        if tip is None:
+            await interaction.response.send_message(
+                f"No tip named `{name}` here!", ephemeral=True
+            )
+            return
+
+        raw_content = discord.utils.escape_mentions(
+            discord.utils.escape_markdown(tip["content"])
+        )
+        embed = discord.Embed(
+            title=f"Raw content of tip {tip['name']}",
+            color=discord.Color.blurple(),
+            description=raw_content,
+        )
+        await interaction.response.send_message(embed=embed)
+
     async def _create_tables(self):
         """Create the necessary database tables."""
 
