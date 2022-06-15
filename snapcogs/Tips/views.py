@@ -14,3 +14,15 @@ class TipCreate(ui.Modal, title="Tip Creation"):
         await interaction.response.send_message(
             f"Tip `{self.name}` created!", ephemeral=True
         )
+
+
+class TipEdit(TipCreate, title="Tip Edit"):
+    def __init__(self, tip) -> None:
+        super().__init__()
+        self.name.default = tip["name"]
+        self.content.default = tip["content"]
+
+    async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.send_message(
+            f"Tip `{self.name}` edited!", ephemeral=True
+        )
