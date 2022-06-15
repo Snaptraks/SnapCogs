@@ -42,7 +42,7 @@ class Bot(commands.Bot):
         aiosqlite.register_adapter(bool, int)
         aiosqlite.register_converter("BOOLEAN", lambda v: bool(int(v)))
         # register aware datetime type for database
-        aiosqlite.register_adapter("DATETIME", lambda dt: dt.isoformat)
+        aiosqlite.register_adapter(datetime, lambda dt: dt.isoformat)
         aiosqlite.register_converter("DATETIME", _decode_dt)
         aiosqlite.register_converter("TIMESTAMP", _decode_dt)
         # allow for cascade deletion
