@@ -7,6 +7,8 @@ from discord.ext import commands
 
 from . import views
 from ..utils import relative_dt
+from ..utils.checks import has_guild_permissions
+from ..utils.views import confirm_prompt
 
 LOGGER = logging.getLogger(__name__)
 
@@ -191,6 +193,44 @@ class Tips(commands.Cog):
             f"Tip {name} successfully deleted.", ephemeral=True
         )
 
+    @tip.command(name="purge")
+    @app_commands.describe(member="The author of the tips to delete.")
+    @has_guild_permissions(manage_messages=True)
+    async def tip_purge(self, interaction: discord.Interaction, member: discord.Member):
+        """Delete all tips from the given member in this server."""
+
+        tips_count = await self._count_member_tips(member)
+        if tips_count == 0:
+            await interaction.response.send_message(
+                f"{member.mention} does not have any tips on this server.",
+                ephemeral=True,
+            )
+            return
+
+        confirm = await confirm_prompt(
+            interaction, f"Purging {tips_count} tips from {member.mention}?"
+        )
+        if not confirm:
+            # send cancelation message within the view
+            return
+
+        await self._delete_member_tips(member)
+        await interaction.followup.send(
+            f"Purged {tips_count} tips from {member.mention}.", ephemeral=True
+        )
+
+    @tip_purge.error
+    async def tip_purge_error(
+        self, interaction: discord.Interaction, error: BaseException
+    ):
+        """Error handler for the tip purge command."""
+
+        if isinstance(error, app_commands.MissingPermissions):
+            await interaction.response.send_message(error, ephemeral=True)
+
+        else:
+            LOGGER.error(error, exc_info=error)
+
     async def _create_tables(self):
         """Create the necessary database tables."""
 
@@ -313,6 +353,22 @@ class Tips(commands.Cog):
             dict(substring=substring, guild_id=interaction.guild.id),
         )
 
+    async def _count_member_tips(self, member: discord.Member):
+        """Return the amount of tips owned by a member in a specific server."""
+
+        async with self.bot.db.execute(
+            """
+            SELECT COUNT(*) AS count
+              FROM tips_tip
+             WHERE author_id=:author_id
+               AND guild_id=:guild_id
+            """,
+            dict(author_id=member.id, guild_id=member.guild.id),
+        ) as c:
+            row = await c.fetchone()
+
+        return row["count"]  # should be 0 or higher
+
     async def _increase_tip_uses(self, tip_id: int):
         """Increase the use of tip with tip_id by 1."""
 
@@ -339,3 +395,18 @@ class Tips(commands.Cog):
         )
         await self.bot.db.commit()
         LOGGER.debug(f"Deleted tip with {tip_id=}")
+
+    async def _delete_member_tips(self, member: discord.Member):
+        """Delete all tips from a member, in a specific server."""
+
+        async with self.bot.db.execute(
+            """
+            DELETE FROM tips_tip
+             WHERE author_id=:author_id
+               AND guild_id=:guild_id
+            """,
+            dict(author_id=member.id, guild_id=member.guild.id),
+        ) as c:
+            deleted = c.rowcount
+
+        return deleted
