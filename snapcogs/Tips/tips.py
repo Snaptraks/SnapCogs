@@ -161,6 +161,36 @@ class Tips(commands.Cog):
         )
         await interaction.response.send_message(embed=embed)
 
+    @tip.command(name="delete")
+    @app_commands.describe(name="Name of the tip.")
+    @app_commands.autocomplete(name=tip_name_autocomplete)
+    async def tip_delete(self, interaction: discord.Interaction, name: str):
+        """Delete a tip that you wrote."""
+
+        bypass_author_check = (
+            await self.bot.is_owner(interaction.user)
+            or interaction.user.guild_permissions.manage_messages
+        )
+
+        if bypass_author_check:
+            # can delete tips not owned
+            tip = await self._get_tip_by_name(interaction, name)
+
+        else:
+            # can only delete own tip
+            tip = await self._get_member_tip_by_name(interaction, name)
+
+        if tip is None:
+            await interaction.response.send_message(
+                f"No tip named `{name}` here!", ephemeral=True
+            )
+            return
+
+        await self._delete_tip(tip["tip_id"])
+        await interaction.response.send_message(
+            f"Tip {name} successfully deleted.", ephemeral=True
+        )
+
     async def _create_tables(self):
         """Create the necessary database tables."""
 
@@ -296,3 +326,16 @@ class Tips(commands.Cog):
         )
         await self.bot.db.commit()
         LOGGER.debug(f"Increased uses for {tip_id=}")
+
+    async def _delete_tip(self, tip_id: int):
+        """Delete a tip from the database."""
+
+        await self.bot.db.execute(
+            """
+            DELETE FROM tips_tip
+             WHERE tip_id=:tip_id
+            """,
+            dict(tip_id=tip_id),
+        )
+        await self.bot.db.commit()
+        LOGGER.debug(f"Deleted tip with {tip_id=}")
