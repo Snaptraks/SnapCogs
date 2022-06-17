@@ -409,4 +409,7 @@ class Tips(commands.Cog):
         ) as c:
             deleted = c.rowcount
 
+        await self.bot.db.commit()
+        LOGGER.debug(f"Deleted {deleted} tips from {member=}")
+
         return deleted
