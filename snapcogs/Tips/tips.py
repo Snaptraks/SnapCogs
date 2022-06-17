@@ -129,9 +129,10 @@ class Tips(commands.Cog):
             )
             .set_author(name=tip_author, icon_url=tip_author.display_avatar.url)
             .add_field(name="Author", value=tip_author.mention)
-            .add_field(name="Uses", value=tip["uses"])
+            .add_field(name="Uses", value=f"`{tip['uses']}`")
             .add_field(name="Created", value=relative_dt(tip["created_at"]))
             .add_field(name="Last Edited", value=relative_dt(tip["last_edited"]))
+            .add_field(name="Tip ID", value=f"`{tip['tip_id']}`")
         )
 
         await interaction.response.send_message(embed=embed)
