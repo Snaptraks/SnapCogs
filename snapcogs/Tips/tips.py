@@ -1,6 +1,7 @@
 from collections import defaultdict
 import logging
 
+import aiosqlite
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -55,7 +56,21 @@ class Tips(commands.Cog):
             last_edited=interaction.created_at,
             name=modal.name.value,
         )
-        await self._save_tip(payload)
+
+        try:
+            await self._save_tip(payload)
+
+        except aiosqlite.IntegrityError:
+            # unique constraint failed
+            await interaction.followup.send(
+                f"There is already a tip named `{payload['name']}` here.",
+                ephemeral=True,
+            )
+
+        else:
+            await interaction.followup.send(
+                f"Tip `{payload['name']}` created!", ephemeral=True
+            )
 
     @tip.command(name="show")
     @app_commands.describe(name="Name of the tip.")
@@ -108,7 +123,21 @@ class Tips(commands.Cog):
             last_edited=interaction.created_at,
             tip_id=tip["tip_id"],
         )
-        await self._edit_tip(payload)
+
+        try:
+            await self._edit_tip(payload)
+
+        except aiosqlite.IntegrityError:
+            # unique constraint failed
+            await interaction.followup.send(
+                f"There is already a tip named `{payload['name']}` here.",
+                ephemeral=True,
+            )
+
+        else:
+            await interaction.followup.send(
+                f"Tip `{payload['name']}` edited!", ephemeral=True
+            )
 
     @tip.command(name="info")
     @app_commands.describe(name="Name of the tip.")
@@ -156,6 +185,7 @@ class Tips(commands.Cog):
         raw_content = discord.utils.escape_mentions(
             discord.utils.escape_markdown(tip["content"])
         )
+
         embed = discord.Embed(
             title=f"Raw content of tip {tip['name']}",
             color=discord.Color.blurple(),
@@ -306,7 +336,7 @@ class Tips(commands.Cog):
             row = await c.fetchone()
 
         if row:
-            LOGGER.debug(f"Found tip {row['name']} for guild {row['guild_id']}.")
+            LOGGER.debug(f"Found tip {row['name']} for guild {row['guild_id']}")
 
         return row
 
