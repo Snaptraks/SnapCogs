@@ -254,6 +254,35 @@ class Tips(commands.Cog):
         else:
             LOGGER.error(error, exc_info=error)
 
+    @tip.command(name="transfer")
+    @app_commands.describe(
+        name="Name of the tip.", member="Member to transfer the tip to."
+    )
+    @app_commands.autocomplete(name=tip_name_autocomplete)
+    async def tip_transfer(
+        self, interaction: discord.Interaction, name: str, member: discord.Member
+    ):
+        """Transfer tip ownership to another member."""
+
+        if member.bot or (interaction.user.id == member.id):
+            await interaction.response.send_message(
+                f"Cannot transfer ownership of the tip to this member."
+            )
+            return
+
+        tip = await self._get_member_tip_by_name(interaction, name)
+
+        if tip is None:
+            await interaction.response.send_message(
+                f"No tip named `{name}` here!", ephemeral=True
+            )
+            return
+
+        await self._edit_tip(dict(author_id=member.id, tip_id=tip["tip_id"]))
+        await interaction.response.send_message(
+            f"Transferring tip `{name}` to {member.mention}",
+        )
+
     async def _create_tables(self):
         """Create the necessary database tables."""
 
