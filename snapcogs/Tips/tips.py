@@ -116,28 +116,21 @@ class Tips(commands.Cog):
         modal = views.TipEdit(tip)
         await interaction.response.send_modal(modal)
         await modal.wait()
-
-        payload = dict(
-            content=modal.content.value,
-            name=modal.name.value,
-            last_edited=interaction.created_at,
-            tip_id=tip["tip_id"],
-        )
+        new_name = modal.name.value
 
         try:
-            await self._edit_tip(payload)
+            await self._edit_tip(
+                dict(content=modal.content.value, name=new_name, tip_id=tip["tip_id"],)
+            )
 
         except aiosqlite.IntegrityError:
             # unique constraint failed
             await interaction.followup.send(
-                f"There is already a tip named `{payload['name']}` here.",
-                ephemeral=True,
+                f"There is already a tip named `{new_name}` here.", ephemeral=True,
             )
 
         else:
-            await interaction.followup.send(
-                f"Tip `{payload['name']}` edited!", ephemeral=True
-            )
+            await interaction.followup.send(f"Tip `{new_name}` edited!", ephemeral=True)
 
     @tip.command(name="info")
     @app_commands.describe(name="Name of the tip.")
@@ -306,6 +299,8 @@ class Tips(commands.Cog):
 
     async def _edit_tip(self, payload):
         """Edit a tip in the database."""
+
+        payload["last_edited"] = discord.utils.utcnow()
 
         await self.bot.db.execute(
             """
