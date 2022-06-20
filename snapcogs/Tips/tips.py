@@ -32,6 +32,21 @@ class Tips(commands.Cog):
         )
         return suggestions
 
+    async def tip_name_from_author_autocomplete(
+        self, interaction: discord.Interaction, current: str
+    ):
+        rows = await self._get_tips_names_like(interaction, current)
+        suggestions = [
+            app_commands.Choice(name=row["name"], value=row["name"])
+            for row in rows
+            if row["author_id"] == interaction.user.id
+        ][:25]
+        LOGGER.debug(
+            f"tip_name_from_author_autocomplete: {current=}, "
+            f"{len(suggestions)} suggestions"
+        )
+        return suggestions
+
     def __init__(self, bot) -> None:
         self.bot = bot
 
@@ -100,7 +115,7 @@ class Tips(commands.Cog):
 
     @tip.command(name="edit")
     @app_commands.describe(name="Name of the tip.")
-    @app_commands.autocomplete(name=tip_name_autocomplete)
+    @app_commands.autocomplete(name=tip_name_from_author_autocomplete)
     async def tip_edit(self, interaction: discord.Integration, name: str):
         """Modify the content of a tip that you own."""
 
@@ -188,7 +203,7 @@ class Tips(commands.Cog):
 
     @tip.command(name="delete")
     @app_commands.describe(name="Name of the tip.")
-    @app_commands.autocomplete(name=tip_name_autocomplete)
+    @app_commands.autocomplete(name=tip_name_from_author_autocomplete)
     async def tip_delete(self, interaction: discord.Interaction, name: str):
         """Delete a tip that you wrote."""
 
@@ -258,7 +273,7 @@ class Tips(commands.Cog):
     @app_commands.describe(
         name="Name of the tip.", member="Member to transfer the tip to."
     )
-    @app_commands.autocomplete(name=tip_name_autocomplete)
+    @app_commands.autocomplete(name=tip_name_from_author_autocomplete)
     async def tip_transfer(
         self, interaction: discord.Interaction, name: str, member: discord.Member
     ):
@@ -266,7 +281,7 @@ class Tips(commands.Cog):
 
         if member.bot or (interaction.user.id == member.id):
             await interaction.response.send_message(
-                f"Cannot transfer ownership of the tip to this member."
+                f"Cannot transfer ownership of the tip to this member.", ephemeral=True
             )
             return
 
@@ -399,7 +414,7 @@ class Tips(commands.Cog):
 
         return await self.bot.db.execute_fetchall(
             """
-            SELECT name
+            SELECT author_id, name
               FROM tips_tip
              WHERE INSTR(name, :substring) > 0
                AND guild_id=:guild_id
