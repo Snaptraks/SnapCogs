@@ -331,6 +331,7 @@ class Tips(commands.Cog):
         )
 
     @tip.command(name="list")
+    @app_commands.describe(member="Author of the tips.")
     async def tip_list(
         self, interaction: discord.Interaction, member: discord.Member = None
     ):
