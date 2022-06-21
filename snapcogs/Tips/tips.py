@@ -167,7 +167,9 @@ class Tips(commands.Cog):
             discord.Embed(
                 title=f"Tip {tip['name']} Information", color=discord.Color.blurple(),
             )
-            .add_field(name="Author", value=tip_author.mention)
+            .add_field(
+                name="Author", value=f"<@{tip['author_id']}>"
+            )  # user might have left the server
             .add_field(name="Uses", value=f"`{tip['uses']}`")
             .add_field(name="Created", value=relative_dt(tip["created_at"]))
             .add_field(name="Last Edited", value=relative_dt(tip["last_edited"]))
