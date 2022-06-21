@@ -301,6 +301,33 @@ class Tips(commands.Cog):
             f"Transferring tip `{name}` to {member.mention}",
         )
 
+    @tip.command(name="claim")
+    @app_commands.describe(name="Name of the tip.")
+    @app_commands.autocomplete(name=tip_name_autocomplete)
+    async def tip_claim(self, interaction: discord.Interaction, name: str):
+        """Claim a tip where the author has left the server."""
+
+        tip = await self._get_tip_by_name(interaction, name)
+
+        if tip is None:
+            await interaction.response.send_message(
+                f"No tip named `{name}` here!", ephemeral=True
+            )
+            return
+
+        member = interaction.guild.get_member(tip["author_id"])
+        if member is not None:
+            await interaction.response.send_message(
+                "The tip author is still in the server.", ephemeral=True
+            )
+            return
+
+        # all checks passed, claiming the tip
+        await self._edit_tip(dict(author_id=interaction.user.id, tip_id=tip["tip_id"]))
+        await interaction.response.send_message(
+            f"Claiming tip `{name}` for yourself.", ephemeral=True
+        )
+
     async def _create_tables(self):
         """Create the necessary database tables."""
 
