@@ -101,13 +101,15 @@ class Tips(commands.Cog):
             )
             return
 
-        tip_author = interaction.guild.get_member(tip["author_id"])
         embed = discord.Embed(
             title=f"Tip {tip['name']}",
             description=tip["content"],
             color=discord.Color.blurple(),
             timestamp=tip["last_edited"],
-        ).set_author(name=tip_author, icon_url=tip_author.display_avatar.url)
+        )
+        tip_author = interaction.guild.get_member(tip["author_id"])
+        if tip_author is not None:
+            embed.set_author(name=tip_author, icon_url=tip_author.display_avatar.url)
 
         await interaction.response.send_message(embed=embed)
 
@@ -161,18 +163,19 @@ class Tips(commands.Cog):
             )
             return
 
-        tip_author = interaction.guild.get_member(tip["author_id"])
         embed = (
             discord.Embed(
                 title=f"Tip {tip['name']} Information", color=discord.Color.blurple(),
             )
-            .set_author(name=tip_author, icon_url=tip_author.display_avatar.url)
             .add_field(name="Author", value=tip_author.mention)
             .add_field(name="Uses", value=f"`{tip['uses']}`")
             .add_field(name="Created", value=relative_dt(tip["created_at"]))
             .add_field(name="Last Edited", value=relative_dt(tip["last_edited"]))
             .add_field(name="Tip ID", value=f"`{tip['tip_id']}`")
         )
+        tip_author = interaction.guild.get_member(tip["author_id"])
+        if tip_author is not None:
+            embed.set_author(name=tip_author, icon_url=tip_author.display_avatar.url)
 
         await interaction.response.send_message(embed=embed)
 
