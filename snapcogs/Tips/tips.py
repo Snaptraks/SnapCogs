@@ -330,6 +330,33 @@ class Tips(commands.Cog):
             f"Claiming tip `{name}` for yourself.", ephemeral=True
         )
 
+    @tip.command(name="list")
+    async def tip_list(
+        self, interaction: discord.Interaction, member: discord.Member = None
+    ):
+        """List all the tips that you, or someone else, wrote."""
+
+        if member is None:
+            member = interaction.user
+
+        tips = await self._get_member_tips(member)
+
+        if tips:
+            max_id_length = max(len(str(tip["tip_id"])) for tip in tips)
+            # todo: have a paginated version
+            embed = discord.Embed(
+                title="List of Tips",
+                color=discord.Color.blurple(),
+                description="\n".join(
+                    f"`{tip['tip_id']:>{max_id_length}d}` {tip['name']}" for tip in tips
+                ),
+            ).set_author(name=member.display_name, icon_url=member.display_avatar.url)
+            await interaction.response.send_message(embed=embed)
+        else:
+            await interaction.response.send_message(
+                f"Member {member} did not write any tips.", ephemeral=True
+            )
+
     async def _create_tables(self):
         """Create the necessary database tables."""
 
@@ -453,6 +480,23 @@ class Tips(commands.Cog):
             """,
             dict(substring=substring, guild_id=interaction.guild.id),
         )
+
+    async def _get_member_tips(self, member: discord.Member):
+        """Get all tips owned by a member in a specific server."""
+
+        async with self.bot.db.execute(
+            """
+            SELECT name, tip_id
+              FROM tips_tip
+             WHERE author_id=:author_id
+               AND guild_id=:guild_id
+             ORDER BY name
+             """,
+            dict(author_id=member.id, guild_id=member.guild.id),
+        ) as c:
+            rows = await c.fetchall()
+
+        return rows
 
     async def _count_member_tips(self, member: discord.Member):
         """Return the amount of tips owned by a member in a specific server."""
