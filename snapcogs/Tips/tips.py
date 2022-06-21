@@ -121,7 +121,6 @@ class Tips(commands.Cog):
     async def tip_edit(self, interaction: discord.Integration, name: str):
         """Modify the content of a tip that you own."""
 
-        LOGGER.debug(f"Editing tip {name} in {interaction.guild}")
         tip = await self._get_member_tip_by_name(interaction, name)
 
         if tip is None:
@@ -130,6 +129,7 @@ class Tips(commands.Cog):
             )
             return
 
+        LOGGER.debug(f"Editing tip {name} in {interaction.guild}")
         modal = views.TipEdit(tip)
         await interaction.response.send_modal(modal)
         await modal.wait()
