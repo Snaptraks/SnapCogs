@@ -358,6 +358,35 @@ class Tips(commands.Cog):
                 f"Member {member} did not write any tips.", ephemeral=True
             )
 
+    @tip.command(name="all")
+    async def tip_all(self, interaction: discord.Interaction):
+        """List all the tips from this server."""
+
+        tips = await self._get_guild_tips(interaction.guild)
+
+        if tips:
+            max_id_length = max(len(str(tip["tip_id"])) for tip in tips)
+            # todo: have a paginated version
+            embed = discord.Embed(
+                title="List of Tips",
+                color=discord.Color.blurple(),
+                description="\n".join(
+                    (
+                        f"`{tip['tip_id']:>{max_id_length}d}` {tip['name']} "
+                        f"({interaction.guild.get_member(tip['author_id'])})"
+                    )
+                    for tip in tips
+                ),
+            ).set_author(
+                name=interaction.guild.name,
+                icon_url=getattr(interaction.guild.icon, "url", ""),
+            )
+            await interaction.response.send_message(embed=embed)
+        else:
+            await interaction.response.send_message(
+                "There are no tips here.", ephemeral=True
+            )
+
     async def _create_tables(self):
         """Create the necessary database tables."""
 
@@ -514,6 +543,22 @@ class Tips(commands.Cog):
             row = await c.fetchone()
 
         return row["count"]  # should be 0 or higher
+
+    async def _get_guild_tips(self, guild: discord.Guild):
+        """Get all tips saved in the given server."""
+
+        async with self.bot.db.execute(
+            """
+            SELECT *
+              FROM tips_tip
+             WHERE guild_id=:guild_id
+             ORDER BY name
+            """,
+            dict(guild_id=guild.id),
+        ) as c:
+            rows = await c.fetchall()
+
+        return rows
 
     async def _increase_tip_uses(self, tip_id: int):
         """Increase the use of tip with tip_id by 1."""
