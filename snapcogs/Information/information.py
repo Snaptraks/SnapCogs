@@ -173,11 +173,13 @@ class Information(commands.Cog):
             description = f"{guild.description}\n{description}"
         embed.description = description
 
-        if guild.icon:
-            thumbnail_url = guild.icon.url
-        else:
-            thumbnail_url = "https://cdn.discordapp.com/embed/avatars/1.png"
-        embed.set_thumbnail(url=thumbnail_url)
+        embed.set_thumbnail(
+            url=(
+                guild.icon.url
+                if guild.icon
+                else "https://cdn.discordapp.com/embed/avatars/1.png"
+            )
+        )
 
         embed.add_field(
             name="Members Info",
