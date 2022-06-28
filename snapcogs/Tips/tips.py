@@ -348,9 +348,7 @@ class Tips(commands.Cog):
             embed = discord.Embed(
                 title="List of Tips",
                 color=discord.Color.blurple(),
-                description="\n".join(
-                    f"`{tip['tip_id']:>{max_id_length}d}` {tip['name']}" for tip in tips
-                ),
+                description="\n".join(tip["name"] for tip in tips),
             ).set_author(name=member.display_name, icon_url=member.display_avatar.url)
             await interaction.response.send_message(embed=embed)
         else:
