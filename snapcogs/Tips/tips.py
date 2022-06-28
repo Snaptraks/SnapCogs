@@ -14,6 +14,27 @@ from ..utils.views import confirm_prompt
 LOGGER = logging.getLogger(__name__)
 
 
+def rank_emoji(n: int):
+    """Return emojis from one (gold medal) to ten.
+    To be used with enumerate(), therefore index 0 returns :first_place: and index 9 
+    returns :ten:.
+    """
+
+    if 0 <= n <= 2:
+        # :first_place: == \U0001f947 == chr(129351)
+        return chr(129351 + n)
+
+    elif 3 <= n <= 8:
+        # :four: == \u0034\ufe0f\u20e3 == chr(52)\ufe0f\u20e3
+        return f"{chr(52 + n - 3)}\ufe0f\u20e3"
+
+    elif n == 9:
+        return "\N{KEYCAP TEN}"
+
+    else:
+        raise ValueError
+
+
 class Tips(commands.Cog):
     tip = app_commands.Group(
         name="tip", description="Save and share tips for people on the server!"
@@ -385,6 +406,99 @@ class Tips(commands.Cog):
                 "There are no tips here.", ephemeral=True
             )
 
+    async def tip_stats_guild(self, guild: discord.Guild):
+        """Build the embed for guild statistics."""
+
+        embed = (
+            discord.Embed(title="Server Tips Statistics", color=discord.Color.blurple())
+            .set_author(
+                name=guild.name,
+                icon_url=(
+                    guild.icon.url
+                    if guild.icon
+                    else "https://cdn.discordapp.com/embed/avatars/1.png"
+                ),
+            )
+            .set_footer(text="Server-wide statistics")
+        )
+
+        # total tips
+        # total tip uses
+        totals = await self._get_guild_totals(guild)
+        embed.add_field(name="Total Tips", value=totals["total_tips"])
+        embed.add_field(name="Total Tip Uses", value=totals["total_uses"])
+
+        # top 3 tips most used
+        top_tips = await self._get_guild_top_tips(guild)
+        embed.add_field(
+            name="Top Tips",
+            value="\n".join(
+                (
+                    f"{rank_emoji(n)}: {tip['name']} "
+                    f"(<@{tip['author_id']}>, {tip['uses']} uses)"
+                )
+                for n, tip in enumerate(top_tips)
+            ),
+            inline=False,
+        )
+
+        # top 3 authors (most written tips)
+        top_authors = await self._get_guild_top_authors(guild)
+        embed.add_field(
+            name="Top Tip Authors",
+            value="\n".join(
+                f"{rank_emoji(n)}: <@{author['author_id']}> ({author['tips']} tips)"
+                for n, author in enumerate(top_authors)
+            ),
+            inline=False,
+        )
+
+        return embed
+
+    async def tip_stats_member(self, member: discord.Member):
+        """Build the embed for member statistics."""
+
+        embed = (
+            discord.Embed(title="Member Tips Statistics", color=discord.Color.blurple())
+            .set_author(name=member, icon_url=member.display_avatar.url)
+            .set_footer(text=f"Statistics for server {member.guild.name}")
+        )
+
+        # tips owned
+        # tip owned uses
+        totals = await self._get_member_totals(member)
+        embed.add_field(name="Total Tips", value=totals["total_tips"])
+        embed.add_field(name="Total Tip Uses", value=totals["total_uses"])
+
+        # top 3 tips most used
+        top_tips = await self._get_member_top_tips(member)
+        embed.add_field(
+            name="Top Tips",
+            value="\n".join(
+                f"{rank_emoji(n)}: {tip['name']} ({tip['uses']} uses)"
+                for n, tip in enumerate(top_tips)
+            ),
+            inline=False,
+        )
+
+        return embed
+
+    @tip.command(name="stats")
+    @app_commands.describe(member="Statistics of the member, or server if ommited.")
+    async def tip_stats(
+        self, interaction: discord.Interaction, member: discord.Member = None
+    ):
+        """Get statistics for a member or the whole server."""
+
+        if member is None:
+            # guild stats
+            embed = await self.tip_stats_guild(interaction.guild)
+        else:
+            # member stats
+            embed = await self.tip_stats_member(member)
+
+        await interaction.response.send_message(embed=embed)
+
     async def _create_tables(self):
         """Create the necessary database tables."""
 
@@ -553,6 +667,92 @@ class Tips(commands.Cog):
              ORDER BY name
             """,
             dict(guild_id=guild.id),
+        ) as c:
+            rows = await c.fetchall()
+
+        return rows
+
+    async def _get_guild_totals(self, guild: discord.Guild):
+        """Get count of tips and total uses for the given server."""
+
+        async with self.bot.db.execute(
+            """
+            SELECT COUNT(*) AS total_tips,
+                   SUM(uses) AS total_uses
+              FROM tips_tip
+             WHERE guild_id=:guild_id
+            """,
+            dict(guild_id=guild.id),
+        ) as c:
+            row = await c.fetchone()
+
+        return row
+
+    async def _get_guild_top_tips(self, guild: discord.Guild, amount: int = 3):
+        """Get the top tips by uses for the given server."""
+
+        async with self.bot.db.execute(
+            """
+            SELECT author_id, name, uses
+              FROM tips_tip
+             WHERE guild_id=:guild_id
+             ORDER BY uses DESC
+             LIMIT :amount
+             """,
+            dict(amount=amount, guild_id=guild.id),
+        ) as c:
+            rows = await c.fetchall()
+
+        return rows
+
+    async def _get_guild_top_authors(self, guild: discord.Guild, amount: int = 3):
+        """Get the top tip authors by number of tips for the given server."""
+
+        async with self.bot.db.execute(
+            """
+            SELECT COUNT(*) as tips, author_id
+              FROM tips_tip
+             WHERE guild_id=:guild_id
+             GROUP BY author_id
+             ORDER BY tips DESC
+             LIMIT :amount
+            """,
+            dict(amount=amount, guild_id=guild.id),
+        ) as c:
+            rows = await c.fetchall()
+
+        return rows
+
+    async def _get_member_totals(self, member: discord.Member):
+        """Get count of tips and total uses from the given member."""
+
+        async with self.bot.db.execute(
+            """
+            SELECT COUNT(*) AS total_tips,
+                   SUM(uses) AS total_uses
+              FROM tips_tip
+             WHERE author_id=:author_id
+               AND guild_id=:guild_id
+            """,
+            dict(author_id=member.id, guild_id=member.guild.id),
+        ) as c:
+            row = await c.fetchone()
+
+        return row
+
+    async def _get_member_top_tips(self, member: discord.Member, amount=3):
+        """Get the top tips by uses from the given member."""
+
+        async with self.bot.db.execute(
+            """
+            SELECT name, uses
+              FROM tips_tip
+             WHERE author_id=:author_id
+               AND guild_id=:guild_id
+             ORDER BY uses DESC
+             LIMIT :amount
+             """,
+            dict(amount=amount, author_id=member.id, guild_id=member.guild.id),
         ) as c:
             rows = await c.fetchall()
 
