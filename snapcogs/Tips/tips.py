@@ -626,19 +626,16 @@ class Tips(commands.Cog):
     async def _get_member_tips(self, member: discord.Member):
         """Get all tips owned by a member in a specific server."""
 
-        async with self.bot.db.execute(
+        return await self.bot.db.execute_fetchall(
             """
             SELECT name, tip_id
               FROM tips_tip
              WHERE author_id=:author_id
                AND guild_id=:guild_id
              ORDER BY name
-             """,
+            """,
             dict(author_id=member.id, guild_id=member.guild.id),
-        ) as c:
-            rows = await c.fetchall()
-
-        return rows
+        )
 
     async def _count_member_tips(self, member: discord.Member):
         """Return the amount of tips owned by a member in a specific server."""
@@ -659,7 +656,7 @@ class Tips(commands.Cog):
     async def _get_guild_tips(self, guild: discord.Guild):
         """Get all tips saved in the given server."""
 
-        async with self.bot.db.execute(
+        return await self.bot.db.execute_fetchall(
             """
             SELECT *
               FROM tips_tip
@@ -667,10 +664,7 @@ class Tips(commands.Cog):
              ORDER BY name
             """,
             dict(guild_id=guild.id),
-        ) as c:
-            rows = await c.fetchall()
-
-        return rows
+        )
 
     async def _get_guild_totals(self, guild: discord.Guild):
         """Get count of tips and total uses for the given server."""
@@ -691,24 +685,21 @@ class Tips(commands.Cog):
     async def _get_guild_top_tips(self, guild: discord.Guild, amount: int = 3):
         """Get the top tips by uses for the given server."""
 
-        async with self.bot.db.execute(
+        return await self.bot.db.execute_fetchall(
             """
             SELECT author_id, name, uses
               FROM tips_tip
              WHERE guild_id=:guild_id
              ORDER BY uses DESC
              LIMIT :amount
-             """,
+            """,
             dict(amount=amount, guild_id=guild.id),
-        ) as c:
-            rows = await c.fetchall()
-
-        return rows
+        )
 
     async def _get_guild_top_authors(self, guild: discord.Guild, amount: int = 3):
         """Get the top tip authors by number of tips for the given server."""
 
-        async with self.bot.db.execute(
+        return await self.bot.db.execute_fetchall(
             """
             SELECT COUNT(*) as tips, author_id
               FROM tips_tip
@@ -718,10 +709,7 @@ class Tips(commands.Cog):
              LIMIT :amount
             """,
             dict(amount=amount, guild_id=guild.id),
-        ) as c:
-            rows = await c.fetchall()
-
-        return rows
+        )
 
     async def _get_member_totals(self, member: discord.Member):
         """Get count of tips and total uses from the given member."""
@@ -743,7 +731,7 @@ class Tips(commands.Cog):
     async def _get_member_top_tips(self, member: discord.Member, amount=3):
         """Get the top tips by uses from the given member."""
 
-        async with self.bot.db.execute(
+        return await self.bot.db.execute_fetchall(
             """
             SELECT name, uses
               FROM tips_tip
@@ -751,12 +739,9 @@ class Tips(commands.Cog):
                AND guild_id=:guild_id
              ORDER BY uses DESC
              LIMIT :amount
-             """,
+            """,
             dict(amount=amount, author_id=member.id, guild_id=member.guild.id),
-        ) as c:
-            rows = await c.fetchall()
-
-        return rows
+        )
 
     async def _increase_tip_uses(self, tip_id: int):
         """Increase the use of tip with tip_id by 1."""
