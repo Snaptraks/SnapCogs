@@ -1,6 +1,7 @@
 import asyncio
 import io
 import json
+import logging
 from pathlib import Path
 import random
 
@@ -9,7 +10,7 @@ from discord import app_commands
 from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageSequence
 
-
+LOGGER = logging.getLogger(__name__)
 COG_PATH = Path(__file__).parent.resolve()
 
 
@@ -18,16 +19,6 @@ class Fun(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-
-        self.bonk_context_menu = app_commands.ContextMenu(
-            name="Bonk", callback=self._bonk_context_menu,
-        )
-        self.bot.tree.add_command(self.bonk_context_menu)
-
-        self.lick_context_menu = app_commands.ContextMenu(
-            name="Lick", callback=self._lick_context_menu,
-        )
-        self.bot.tree.add_command(self.lick_context_menu)
 
     @app_commands.command(name="8ball")
     @app_commands.describe(question="What do you want to ask the Magic 8 Ball?")
@@ -58,67 +49,54 @@ class Fun(commands.Cog):
             avatar = io.BytesIO(await interaction.user.display_avatar.read())
 
             # Edit template with avatar
-            bytes = await self.bot.loop.run_in_executor(
-                None, self._assemble_8ball_image, avatar
-            )
+            _bytes = await asyncio.to_thread(self._assemble_8ball_image, avatar)
 
-            file = discord.File(bytes, filename="8ball.png")
+            file = discord.File(_bytes, filename="8ball.png")
             embed.set_image(url=f"attachment://{file.filename}")
             embed.description = f"> {question}"
 
             await interaction.followup.send(embed=embed, file=file)
 
-    @commands.hybrid_command(name="bonk")
-    @app_commands.describe(member="Member to bonk", text="Text to add to the image")
-    async def bonk_command(self, ctx, member: discord.Member, *, text: str = None):
-        """Bonk a member, and add a message!
-        Due to the member argument not being last, you will have to
-        use a mention (@User Here) or quote "User Here" their name
-        if it contains spaces.
-        """
+    @app_commands.command()
+    @app_commands.describe(member="Member to bonk.", text="Text to add to the image.")
+    async def bonk(
+        self,
+        interaction: discord.Interaction,
+        member: discord.Member,
+        text: str = None,
+    ):
+        """Bonk a member, and add a message!"""
 
-        await ctx.reply(file=await self.create_bonk_file(member, text))
+        await interaction.response.send_message(
+            file=await self.create_bonk_file(member, text)
+        )
 
-    @bonk_command.error
-    async def bonk_error(self, ctx, error):
+    @bonk.error
+    async def bonk_error(self, interaction: discord.Interaction, error: BaseException):
         """Error handler for the bonk command."""
 
         if isinstance(
             error, (commands.MemberNotFound, commands.MissingRequiredArgument)
         ):
-            await ctx.reply(error)
+            await interaction.response.send_message(error, ephemeral=True)
 
         else:
-            raise error
-
-    async def _bonk_context_menu(
-        self, interaction: discord.Interaction, member: discord.Member
-    ):
-        """Bonk a member!"""
-
-        await interaction.response.send_message(
-            file=await self.create_bonk_file(member, None)
-        )
+            LOGGER.error(error, exc_info=error)
 
     async def create_bonk_file(self, member, text=None):
         """Common funtion to fetch the member avatar, and create the file to send."""
 
         avatar = io.BytesIO(await member.display_avatar.read())
-        bytes = await self.bot.loop.run_in_executor(
-            None, self._assemble_bonk_image, avatar, text
-        )
-        return discord.File(bytes, filename="bonk.png")
+        _bytes = await asyncio.to_thread(self._assemble_bonk_image, avatar, text)
+        return discord.File(_bytes, filename="bonk.png")
 
-    async def _lick_context_menu(
-        self, interaction: discord.Interaction, member: discord.Member
-    ):
-        bytes = await self.bot.loop.run_in_executor(
-            None,
-            self._assemble_lick_gif,
-            io.BytesIO(await member.display_avatar.read()),
+    @app_commands.command()
+    @app_commands.describe(member="Member to lick.")
+    async def lick(self, interaction: discord.Interaction, member: discord.Member):
+        _bytes = await asyncio.to_thread(
+            self._assemble_lick_gif, io.BytesIO(await member.display_avatar.read()),
         )
-
-        file = discord.File(bytes, filename="lick.gif")
+        file = discord.File(_bytes, filename="lick.gif")
 
         await interaction.response.send_message(file=file)
 
@@ -137,11 +115,11 @@ class Fun(commands.Cog):
         new.paste(small, (105, 301))
 
         new.paste(template, mask=template)
-        bytes = io.BytesIO()
-        new.save(bytes, format="png")
-        bytes.seek(0)
+        _bytes = io.BytesIO()
+        new.save(_bytes, format="png")
+        _bytes.seek(0)
 
-        return bytes
+        return _bytes
 
     def _assemble_bonk_image(self, avatar_bytes, text=None):
         avatar = Image.open(avatar_bytes)
@@ -190,7 +168,7 @@ class Fun(commands.Cog):
         avatar = ImageOps.fit(avatar, mask.size)
 
         frames = []
-        for i, frame in enumerate(ImageSequence.Iterator(lick_gif)):
+        for frame in ImageSequence.Iterator(lick_gif):
             frame = frame.convert("RGBA")
             box = (frame.size[0] - frame.size[1] - 50, 0, *frame.size)
             frame = frame.crop(box=box)
@@ -199,10 +177,10 @@ class Fun(commands.Cog):
             base.paste(frame, mask=frame)
             frames.append(base)
 
-        bytes = io.BytesIO()
+        _bytes = io.BytesIO()
         frames[0].save(
-            bytes, save_all=True, append_images=frames[1:], loop=0, format="gif"
+            _bytes, save_all=True, append_images=frames[1:], loop=0, format="gif"
         )
-        bytes.seek(0)
+        _bytes.seek(0)
 
-        return bytes
+        return _bytes
