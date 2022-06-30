@@ -323,6 +323,7 @@ class Tips(commands.Cog):
         await interaction.response.send_message(
             f"Transferring tip `{name}` to {member.mention}",
         )
+        LOGGER.debug(f"Tip {name} transfered to {member}")
 
     @tip.command(name="claim")
     @app_commands.describe(name="Name of the tip.")
@@ -350,6 +351,7 @@ class Tips(commands.Cog):
         await interaction.response.send_message(
             f"Claiming tip `{name}` for yourself.", ephemeral=True
         )
+        LOGGER.debug(f"Tip {name} claimed by {interaction.user}")
 
     @tip.command(name="list")
     @app_commands.describe(member="Author of the tips.")
@@ -362,9 +364,9 @@ class Tips(commands.Cog):
             member = interaction.user
 
         tips = await self._get_member_tips(member)
+        LOGGER.debug(f"Listing {len(tips)} tips for {interaction.guild.name}")
 
         if tips:
-            max_id_length = max(len(str(tip["tip_id"])) for tip in tips)
             # todo: have a paginated version
             embed = discord.Embed(
                 title="List of Tips",
@@ -382,6 +384,7 @@ class Tips(commands.Cog):
         """List all the tips from this server."""
 
         tips = await self._get_guild_tips(interaction.guild)
+        LOGGER.debug(f"Listing {len(tips)} tips for {interaction.guild.name}")
 
         if tips:
             max_id_length = max(len(str(tip["tip_id"])) for tip in tips)
@@ -493,9 +496,13 @@ class Tips(commands.Cog):
         if member is None:
             # guild stats
             embed = await self.tip_stats_guild(interaction.guild)
+            LOGGER.debug(f"Sending tip stats for guild {interaction.guild.name}")
         else:
             # member stats
             embed = await self.tip_stats_member(member)
+            LOGGER.debug(
+                f"Sending tip stats for member {member} in {member.guild.name}"
+            )
 
         await interaction.response.send_message(embed=embed)
 
