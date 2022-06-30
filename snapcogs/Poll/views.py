@@ -96,7 +96,7 @@ class PollInput(ui.View):
         description = "\n".join(
             f"`{i:>2}.` {bold(i, option)}" for i, option in self.options.items()
         )
-        graph = await asyncio.get_running_loop().run_in_executor(None, self.build_graph)
+        graph = await asyncio.to_thread(self.build_graph)
         embed = (
             discord.Embed(
                 title=self.question,
