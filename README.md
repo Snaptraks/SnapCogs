@@ -205,6 +205,56 @@ Example of a roles selection menu:
 
 ![roles example](.github/assets/roles_example.png)
 
+### Tips
+
+> **\>** ``/tip create``
+>
+> Create a new tip for the current server, owned by you. This sends a modal to the user, with a form to fill out. Tips support markdown and mentions.
+
+> **\>** ``/tip show <name>``
+>
+> Show a tip in the current channel. This command, as well as all the others taking a tip's name as argument, feature autocomplete with a list of names similar to what is being typed. This command autocompletes from all tips in the server.
+
+> **\>** ``/tip edit <name>``
+>
+> Modify the content of a tip that you own. This sends a modal to the user with the current tip data already filled out. The autocomplete will only suggest tip names that are written by you.
+
+> **\>** ``/tip info <name>``
+>
+> Get information about a tip. The information provided includes the tip's author, when it was created and last edited, and number of uses (one usage is recorded when ``/tip show`` is used).
+
+> **\>** ``/tip raw <name>``
+>
+> Get the raw content of a tip, escaping markdown. This is useful when trying to see how a tip was formatted.
+
+> **\>** ``/tip delete <name>``
+>
+> Delete a tip that you wrote. Members with the ``Manage Messages`` server permission, as well as the bot author, can delete tips from other members.
+
+> **\>** ``/tip purge <member>``
+>
+> Delete all tips from the given member in this server. You need the ``Manage Messages`` server permission to be able to use this command.
+
+> **\>** ``/tip transfer <name> <member>``
+>
+> Transfer tip ownership to another member. You can only transfer tips that you own, to another member that isn't you, or a bot!
+
+> **\>** ``/tip claim <name>``
+>
+> Claim a tip where the author has left the server.
+
+> **\>** ``/tip list [member]``
+>
+> List all the tips that you, or someone else, wrote. Using this command without the ``member`` argument will list your tips.
+
+> **\>** ``/tip all``
+>
+> List all the tips from this server.
+
+> **\>** ``/tip stats [member]``
+>
+> Get statistics for a member or the whole server. Using this command without the ``member`` argument will show statistics for the whole server. Member statistics include total tips and tips usage, as well as the top 3 tips most used in the server. Server statistics add the top 3 members with the most written tips.
+
 ### utils
 
 The ``snapcog.utils`` package is not a Cog, but rather a collection of useful objects and functions, some necessary for the rest of the package. The following are therefore not application commands, context menus, nor text commands.
@@ -216,6 +266,26 @@ The ``snapcog.utils`` package is not a Cog, but rather a collection of useful ob
 > ``await snapcog.utils.run_process(command: str) -> tuple[str]``
 >
 > Run a command in shell. This then returns the `stdout` and `stderr` inside a tuple. This is potentially dangerous, so be careful how you use it!
+
+#### Checks
+
+> ``snapcogs.utils.checks.has_guild_permissions(**permissions: bool)``
+>
+> Similar to `app_commands.checks.has_permissions`, but operates on guild wide permissions instead of the current channel permissions. If this check is called in a DM context, it will raise an exception, `app_commands.NoPrivateMessage`. Ported from `discord.ext.commands` and adapted for ApplicationCommands.
+
+>  ``snapcogs.utils.checks.bot_has_guild_permissions(**permissions: bool)``
+>
+> Similar to `app_commands.checks.has_guild_permissions`, but checks the bot members guild permissions. Ported from `discord.ext.commands` and adapted for ApplicationCommands.
+
+#### Views
+
+> ``snapcogs.utils.views.Confirm``
+>
+> A view that asks the user to confirm a choice, by the press of ``ui.Buttons``.
+
+> ``snapcogs.utils.views.confirm_prompt(interaction: discord.Interaction, content: str) -> bool ``
+>
+> Sends a message to the user from the interaction, with ``views.Confirm`` attached to it. Once the interaction is done, returns a ``bool`` whether or not the action was confirmed.
 
 #### Transformers
 
