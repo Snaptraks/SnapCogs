@@ -52,10 +52,8 @@ class Bot(commands.Bot):
             try:
                 LOGGER.debug(f"Loading {extension}... ")
                 await self.load_extension(extension)
-            except Exception as e:
-                exc = "{}: {}".format(type(e).__name__, e)
-                LOGGER.error("Failed to load {}\n{}".format(extension, exc))
-                LOGGER.debug(traceback.format_exc())
+            except Exception as error:
+                LOGGER.error(error, exc_info=error)
             else:
                 LOGGER.debug(f"{extension} loaded successfully.")
 
