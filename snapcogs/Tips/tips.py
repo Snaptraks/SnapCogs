@@ -206,7 +206,7 @@ class Tips(commands.Cog):
     @app_commands.describe(name="Name of the tip.")
     @app_commands.autocomplete(name=tip_name_autocomplete)
     async def tip_raw(self, interaction: discord.Interaction, name: str):
-        """Get the raw content of a tip, excaping markdown."""
+        """Get the raw content of a tip, escaping markdown."""
 
         tip = await self._get_tip_by_name(interaction, name)
 
