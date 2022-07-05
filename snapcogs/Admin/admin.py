@@ -11,6 +11,12 @@ from discord.ext import commands
 from ..utils import cleanup_code
 
 
+def get_syntax_error(e):
+    if e.text is None:
+        return f"```py\n{e.__class__.__name__}: {e}\n```"
+    return f"```py\n{e.text}{'^':>{e.offset}}\n" f"{e.__class__.__name__}: {e}```"
+
+
 class Admin(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -142,7 +148,7 @@ class Admin(commands.Cog):
                 try:
                     code = compile(cleaned, "<repl session>", "exec")
                 except SyntaxError as e:
-                    await response.reply(self.get_syntax_error(e))
+                    await response.reply(get_syntax_error(e))
                     continue
 
             variables["message"] = response
