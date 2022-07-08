@@ -1,6 +1,5 @@
 from datetime import datetime
 import logging
-import traceback
 
 import aiosqlite
 import aiohttp
