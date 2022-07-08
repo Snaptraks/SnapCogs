@@ -1,5 +1,8 @@
+from typing import Optional
+
 import discord
 from discord import ui
+
 
 # confirm view
 class Confirm(ui.View):
@@ -27,7 +30,9 @@ class Confirm(ui.View):
 
 
 # confirm prompt
-async def confirm_prompt(interaction: discord.Interaction, content: str = None) -> bool:
+async def confirm_prompt(
+    interaction: discord.Interaction, content: Optional[str] = None
+) -> Optional[bool]:
     """Send a confirmation prompt to the user, and return a bool."""
 
     view = Confirm()
