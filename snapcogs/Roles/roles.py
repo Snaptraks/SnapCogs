@@ -14,9 +14,10 @@ LOGGER = logging.getLogger(__name__)
 
 class Roles(commands.Cog):
     roles = app_commands.Group(
-        name="roles", description="Create a roles selection menu"
+        name="roles",
+        description="Create a roles selection menu",
+        default_permissions=discord.Permissions(manage_roles=True),
     )
-    roles.default_permissions = discord.Permissions(manage_roles=True)
 
     def __init__(self, bot):
         self.bot = bot
