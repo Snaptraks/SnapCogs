@@ -17,9 +17,10 @@ class Link(commands.Cog):
     """Module that allows syncing channel messages across Discord servers."""
 
     link = app_commands.Group(
-        name="link", description="Manage links between channels of different servers."
+        name="link",
+        description="Manage links between channels of different servers.",
+        default_permissions=discord.Permissions(manage_messages=True),
     )
-    link.default_permissions = discord.Permissions(manage_messages=True)
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
