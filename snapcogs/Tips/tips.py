@@ -16,7 +16,7 @@ LOGGER = logging.getLogger(__name__)
 
 def rank_emoji(n: int):
     """Return emojis from one (gold medal) to ten.
-    To be used with enumerate(), therefore index 0 returns :first_place: and index 9 
+    To be used with enumerate(), therefore index 0 returns :first_place: and index 9
     returns :ten:.
     """
 
@@ -307,7 +307,7 @@ class Tips(commands.Cog):
 
         if member.bot or (interaction.user.id == member.id):
             await interaction.response.send_message(
-                f"Cannot transfer ownership of the tip to this member.", ephemeral=True
+                "Cannot transfer ownership of the tip to this member.", ephemeral=True
             )
             return
 
@@ -531,18 +531,22 @@ class Tips(commands.Cog):
 
         await self.bot.db.execute(
             """
-            INSERT INTO tips_tip(author_id,
-                                 content, 
-                                 created_at, 
-                                 guild_id, 
-                                 last_edited,
-                                 name)
-            VALUES (:author_id,
-                    :content,
-                    :created_at,
-                    :guild_id,
-                    :last_edited,
-                    :name)
+            INSERT INTO tips_tip(
+                author_id,
+                content,
+                created_at,
+                guild_id,
+                last_edited,
+                name
+            )
+            VALUES (
+                :author_id,
+                :content,
+                :created_at,
+                :guild_id,
+                :last_edited,
+                :name
+            )
             """,
             payload,
         )
@@ -573,7 +577,7 @@ class Tips(commands.Cog):
 
         async with self.bot.db.execute(
             """
-            SELECT * 
+            SELECT *
               FROM tips_tip
              WHERE guild_id=:guild_id
                AND name=:name

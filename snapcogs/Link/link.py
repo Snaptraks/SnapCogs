@@ -335,10 +335,14 @@ class Link(commands.Cog):
 
         await self.bot.db.execute(
             """
-            INSERT INTO link_webhook(channel_id,
-                                     url)
-            VALUES (:channel_id,
-                    :url)
+            INSERT INTO link_webhook(
+                channel_id,
+                url
+            )
+            VALUES (
+                :channel_id,
+                :url
+            )
                 ON CONFLICT(channel_id) DO
             UPDATE SET url=:url
              WHERE channel_id=:channel_id
