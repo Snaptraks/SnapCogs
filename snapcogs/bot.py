@@ -79,8 +79,8 @@ class Bot(commands.Bot):
     ) -> None:
         """Default error handler.
 
-        To make sure errors are logged here even when application commands have
-        an error handler, you should use the following pattern for the handler:
+        To make sure errors are logged here even when commands have an error
+        handler, you should use the following pattern for the handler:
 
         ```py
         async def error_handler(ctx: commands.Context, error: Exception):
