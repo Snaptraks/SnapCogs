@@ -1,5 +1,4 @@
 import logging
-import traceback
 
 import discord
 from discord import app_commands
@@ -309,8 +308,7 @@ class Roles(commands.Cog):
             )
 
         else:
-            LOGGER.error("There was an error in a roles command.")
-            LOGGER.error(traceback.format_exc())
+            interaction.extras["error_handled"] = False
 
     async def _create_tables(self):
         await self.bot.db.execute(

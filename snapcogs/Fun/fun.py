@@ -81,7 +81,7 @@ class Fun(commands.Cog):
             await interaction.response.send_message(error, ephemeral=True)
 
         else:
-            LOGGER.error(error, exc_info=error)
+            interaction.extras["error_handled"] = False
 
     async def create_bonk_file(self, member, text=None):
         """Common funtion to fetch the member avatar, and create the file to send."""

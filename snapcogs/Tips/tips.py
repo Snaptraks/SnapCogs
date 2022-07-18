@@ -293,7 +293,7 @@ class Tips(commands.Cog):
             await interaction.response.send_message(error, ephemeral=True)
 
         else:
-            LOGGER.error(error, exc_info=error)
+            interaction.extras["error_handled"] = False
 
     @tip.command(name="transfer")
     @app_commands.describe(
