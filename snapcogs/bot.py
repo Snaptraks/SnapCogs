@@ -79,8 +79,19 @@ class Bot(commands.Bot):
     ) -> None:
         """Default error handler.
 
-        This tries the registered error handlers first, and logs the error to the
-        logger if the handlers raise an exception.
+        To make sure errors are logged here even when application commands have
+        an error handler, you should use the following pattern for the handler:
+
+        ```py
+        async def error_handler(ctx: commands.Context, error: Exception):
+            if isinstance(error, ...):
+                # do something here
+            elif isinstance(error, ...):
+                # for another type of exception
+            else:
+                # this is the important part
+                ctx.error_handled = False
+        ```
         """
         if self.extra_events.get("on_command_error", None):
             # do nothing if user has an on_command_error event registered
