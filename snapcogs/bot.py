@@ -73,3 +73,29 @@ class Bot(commands.Bot):
             f"{oauth_url}\n"
             "--------"
         )
+
+    async def on_command_error(
+        self, ctx: commands.Context, exception: commands.CommandError, /
+    ) -> None:
+        """Default error handler.
+
+        This tries the registered error handlers first, and logs the error to the
+        logger if the handlers raise an exception.
+        """
+        if self.extra_events.get("on_command_error", None):
+            # do nothing if user has an on_command_error event registered
+            return
+
+        error_handled = getattr(ctx, "error_handled", True)
+        command = ctx.command
+        cog = ctx.cog
+        if (
+            (command and not command.has_error_handler())  # if no error handler defined
+            and (cog and not cog.has_error_handler())  # if no error handler defined
+            or not error_handled  # or the error is not handled
+        ):
+            LOGGER.error(
+                f"Exception {exception} raised in {command}", exc_info=exception
+            )
+        else:
+            LOGGER.debug(f"Error in command {command} was already handled")
