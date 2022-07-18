@@ -64,7 +64,7 @@ async def main():
         await bot.start(TOKEN)
 ```
 
-For ease of use,  the package comes with a ``commands.Bot`` subclass that takes the extensions to load at startup as a keyword argument.
+For ease of use, the package comes with a ``commands.Bot`` subclass that takes the extensions to load at startup as a keyword argument.
 
 ```py
 from snapcogs import Bot
@@ -84,6 +84,39 @@ async def main():
 ## Bot Subclass
 
 We provide a ``commands.Bot`` subclass that handles the creation of a SQLite database and other utilities needed for the cogs to work properly.
+
+This subclass also provides a custom ``on_command_error`` where errors that are explicitely not handled by the command's or cog's error handler will be logged with the ``logging`` module. This is different from the default behaviour from ``discord.py`` where errors were silenced no matter what when an eror handler was found.
+
+To make sure errors are logged here even when application commands have an error handler, you should use the following pattern for the handler:
+
+```py
+async def error_handler(ctx: commands.Context, error: Exception):
+    if isinstance(error, ...):
+        # do something here
+    elif isinstance(error, ...):
+        # for another type of exception
+    else:
+        # this is the important part
+        ctx.error_handled = False
+```
+
+## CommandTree Subclass
+
+Similar to the ``Bot`` subclass, we provide a custom ``app_commands.CommandTree`` subclass that overwrites the ``on_error`` method to log errors to the logger, whenever errors are explicitely not handled.
+By default, the ``Bot`` subclass will use this custom ``CommandTree``.
+
+To make sure errors are logged here even when commands have an error handler, you should use the following pattern for the handler:
+
+```py
+async def error_handler(interaction: discord.Interaction, error: Exception):
+    if isinstance(error, ...):
+        # do something here
+    elif isinstance(error, ...):
+        # for another type of exception
+    else:
+        # this is the important part
+        interaction.extras["error_handled"] = False
+```
 
 ## Cogs Description
 
