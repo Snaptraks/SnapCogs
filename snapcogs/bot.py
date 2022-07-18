@@ -6,6 +6,8 @@ import aiohttp
 import discord
 from discord.ext import commands
 
+from .tree import CommandTree
+
 LOGGER = logging.getLogger("snapcogs")
 LOG_HANDLER = logging.StreamHandler()
 if discord.client.stream_supports_colour(LOG_HANDLER.stream):
@@ -27,6 +29,7 @@ class Bot(commands.Bot):
         self.db_name = kwargs.get("db_name", ":memory:")
         self.permissions = kwargs.get("permissions", discord.Permissions.text())
         self.startup_extensions = kwargs.get("startup_extensions", [])
+        kwargs["tree_cls"] = kwargs.get("tree_cls", CommandTree)
         super().__init__(*args, **kwargs)
 
     async def setup_hook(self):
