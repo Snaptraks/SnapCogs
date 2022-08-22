@@ -33,9 +33,11 @@ class Roles(commands.Cog):
 
     async def load_persistent_views(self):
         for view_data in await self._get_all_views():
-            self.bot.add_view(
-                await self.build_view(view_data), message_id=view_data["message_id"],
-            )
+            view = await self.build_view(view_data)
+            if view is not None:
+                self.bot.add_view(
+                    view, message_id=view_data["message_id"],
+                )
 
     async def save_persistent_view(self, view, message):
         view_payload = dict(
@@ -55,6 +57,9 @@ class Roles(commands.Cog):
 
     async def build_view(self, view_data):
         guild = self.bot.get_guild(view_data["guild_id"])
+        if guild is None:
+            # skip if we cannot find the guild (ie. the bot left the guild)
+            return None
 
         # get the roles
         roles = [
