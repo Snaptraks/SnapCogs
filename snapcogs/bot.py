@@ -101,8 +101,11 @@ class Bot(commands.Bot):
         command = ctx.command
         cog = ctx.cog
         if (
-            (command and not command.has_error_handler())  # if no error handler defined
-            and (cog and not cog.has_error_handler())  # if no error handler defined
+            command is None
+            or (  # if no error handler defined
+                (command and not command.has_error_handler())
+                and (cog and not cog.has_error_handler())
+            )
             or not error_handled  # or the error is not handled
         ):
             LOGGER.error(
