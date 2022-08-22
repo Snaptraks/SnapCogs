@@ -1,5 +1,5 @@
 aiosqlite>=0.17.0
-discord.py>=1.7.3  # because 2.0 isn't released yet
+discord.py>=2.0
 matplotlib>=3.5
 Pillow>=9.0
 pint>=0.19
