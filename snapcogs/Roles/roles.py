@@ -36,7 +36,8 @@ class Roles(commands.Cog):
             view = await self.build_view(view_data)
             if view is not None:
                 self.bot.add_view(
-                    view, message_id=view_data["message_id"],
+                    view,
+                    message_id=view_data["message_id"],
                 )
 
     async def save_persistent_view(self, view, message):
