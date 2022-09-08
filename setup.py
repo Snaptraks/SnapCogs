@@ -145,7 +145,14 @@ setup(
     #
     # If there are data files included in your packages that need to be
     # installed, specify them here.
-    # package_data={"snapcogs.TestCog": ["package_data.dat"]},  # Optional
+    package_data={
+        "snapcogs.Fun": [
+            "8ball_answers.json",
+            "8ball_filter.png",
+            "bonk_template.png",
+            "lick_template.gif",
+        ]
+    },  # Optional
     include_package_data=True,
     #
     # Although 'package_data' is the preferred approach, in some case you may
