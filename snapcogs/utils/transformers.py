@@ -27,3 +27,5 @@ class BotMessageTransformer(MessageTransformer):
 
         if msg.author != interaction.guild.me:
             raise TransformerNotBotMessage()
+
+        return msg
