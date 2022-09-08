@@ -103,7 +103,7 @@ class Roles(commands.Cog):
             color=discord.Color.green(),
         )
         await interaction.followup.send(embed=embed, ephemeral=True)
-        await interaction.delete_original_message()
+        await interaction.delete_original_response()
 
         return selected_roles
 
