@@ -93,8 +93,11 @@ class Fun(commands.Cog):
     @app_commands.command()
     @app_commands.describe(member="Member to lick.")
     async def lick(self, interaction: discord.Interaction, member: discord.Member):
+        """Lick a member! It's not as lewd as it sounds..."""
+
         _bytes = await asyncio.to_thread(
-            self._assemble_lick_gif, io.BytesIO(await member.display_avatar.read()),
+            self._assemble_lick_gif,
+            io.BytesIO(await member.display_avatar.read()),
         )
         file = discord.File(_bytes, filename="lick.gif")
 
