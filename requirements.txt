@@ -1,5 +1,7 @@
 aiosqlite>=0.17.0
+dateutil
 discord.py>=2.0
 matplotlib>=3.5
 Pillow>=9.0
 pint>=0.19
+pytz
