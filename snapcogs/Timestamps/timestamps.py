@@ -1,6 +1,7 @@
 from collections import defaultdict
 from datetime import datetime
 import itertools
+import typing
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from dateutil.parser import parse, ParserError
@@ -11,6 +12,19 @@ from discord.ext import commands
 from .timezones import abbrevs_pytz
 
 TZ_DATA = abbrevs_pytz()
+
+TIMESTAMP_STYLE = [
+    app_commands.Choice(name=v, value=k)
+    for k, v in {
+        "t": "Short Time",
+        "T": "Long Time",
+        "d": "Short Date",
+        "D": "Long Date",
+        "f": "Short Date Time",
+        "F": "Long Date Time",
+        "R": "Relative Time",
+    }.items()
+]
 
 
 class DatetimeTransformerError(app_commands.AppCommandError):
@@ -47,7 +61,9 @@ class DatetimeTransformer(app_commands.Transformer):
 
 
 class TimezoneTransformer(app_commands.Transformer):
-    async def transform(self, interaction: discord.Interaction, value: str, /) -> str:
+    async def transform(
+        self, interaction: discord.Interaction, value: str, /
+    ) -> ZoneInfo:
         try:
             tz = ZoneInfo(value)
         except ZoneInfoNotFoundError as e:
@@ -73,8 +89,9 @@ class Timestamps(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    def _make_timestamps_embed(self, dt: datetime) -> discord.Embed:
-        styles = "fFtTdDR"
+    def _make_timestamps_embed(
+        self, dt: datetime, style: typing.Optional[app_commands.Choice[str]] = None
+    ) -> discord.Embed:
         embed = discord.Embed(
             title="Timestamps",
             color=discord.Color.blurple(),
@@ -84,33 +101,49 @@ class Timestamps(commands.Cog):
                 "box below the format of your choice."
             ),
         )
-        for style in styles:
-            formatted_dt = discord.utils.format_dt(dt, style=style)
+        for s in TIMESTAMP_STYLE.keys():
+            if style is not None and style.value != s:
+                continue
+            formatted_dt = discord.utils.format_dt(dt, style=s)
             embed.add_field(name=formatted_dt, value=f"`{formatted_dt}`")
 
         return embed
 
     @app_commands.command()
-    async def now(self, interaction: discord.Interaction) -> None:
+    @app_commands.describe(style="The style to format the datetime with.")
+    @app_commands.choices(style=TIMESTAMP_STYLE)
+    async def now(
+        self,
+        interaction: discord.Interaction,
+        style: typing.Optional[app_commands.Choice[str]] = None,
+    ) -> None:
         """Create timestamps of now to send to get rich formatting."""
+
         _now = discord.utils.utcnow()
 
-        embed = self._make_timestamps_embed(_now)
+        embed = self._make_timestamps_embed(_now, style=style)
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command()
-    @app_commands.describe(dt="Date and time", tz="Time zone of the time")
+    @app_commands.describe(
+        dt="The date and time.",
+        tz="The time zone of the time.",
+        style="The style to format the datetime with.",
+    )
     @app_commands.rename(dt="datetime", tz="timezone")
+    @app_commands.choices(style=TIMESTAMP_STYLE)
     async def timestamp(
         self,
         interaction: discord.Interaction,
         dt: app_commands.Transform[str, DatetimeTransformer],
         tz: app_commands.Transform[str, TimezoneTransformer],
+        style: typing.Optional[app_commands.Choice[str]] = None,
     ) -> None:
         """Create timestamps of the given time to send to get rich formatting."""
+
         dt_tz = dt.replace(tzinfo=tz)
 
-        embed = self._make_timestamps_embed(dt_tz)
+        embed = self._make_timestamps_embed(dt_tz, style=style)
         await interaction.response.send_message(embed=embed)
 
     @timestamp.error

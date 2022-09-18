@@ -1,6 +1,7 @@
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import Optional
 
 import pytz
 
@@ -21,7 +22,7 @@ class TZChoice:
         # return self.utcoffset == other.utcoffset
         # return self.offsets == other.offsets
         # return self.name == other.name
-        return self.utcoffset_str
+        return self.utcoffset_str() == other.utcoffset_str()
 
     def __lt__(self, other) -> bool:
         return int(self.utcoffset_str()) < int(other.utcoffset_str())
@@ -36,13 +37,13 @@ class TZChoice:
         now = datetime.now(tzone)
         return now
 
-    def utcoffset_str(self, dt: datetime = None) -> str:
+    def utcoffset_str(self, dt: Optional[datetime] = None) -> str:
         if dt is None:
             dt = self.now()
         return f"{dt:%z}"
 
     @property
-    def offsets(self) -> tuple[timedelta]:
+    def offsets(self) -> tuple[timedelta, ...]:
         return (self.utcoffset, self.dstoffset)
 
     @property
@@ -57,7 +58,7 @@ class TZChoice:
         return self.dstoffset.total_seconds() != 0
 
 
-def abbrevs_pytz() -> dict[str, TZChoice]:
+def abbrevs_pytz() -> dict[str, set[TZChoice]]:
     choices = defaultdict(set)
 
     for name in pytz.all_timezones:
