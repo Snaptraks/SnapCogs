@@ -14,23 +14,16 @@ class TZChoice:
     dstoffset: timedelta
 
     def __hash__(self) -> int:
-        # return hash(self.utcoffset)
-        # return hash(self.offsets)
         return hash(self.utcoffset_str())
 
     def __eq__(self, other) -> bool:
-        # return self.utcoffset == other.utcoffset
-        # return self.offsets == other.offsets
-        # return self.name == other.name
         return self.utcoffset_str() == other.utcoffset_str()
 
     def __lt__(self, other) -> bool:
         return int(self.utcoffset_str()) < int(other.utcoffset_str())
 
     def __repr__(self) -> str:
-        # return f"TZ<{self.choice_str}>"
         return f"TZ<{self.choice_str}>"
-        # return f"TZ<{self.offsets}>"
 
     def now(self) -> datetime:
         tzone = pytz.timezone(self.name)
@@ -79,7 +72,6 @@ def abbrevs_pytz() -> dict[str, set[TZChoice]]:
             if utcoffset is None:
                 continue
             choices[tzabbrev].add(TZChoice(name, tzabbrev, utcoffset, dstoffset))
-            # choices[tzabbrev].add((utcoffset, dstoffset))
 
     choices["UTC"].add(TZChoice("UTC", "UTC", timedelta(0), timedelta(0)))
 
