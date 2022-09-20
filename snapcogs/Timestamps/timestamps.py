@@ -13,18 +13,17 @@ from .timezones import abbrevs_pytz
 
 TZ_DATA = abbrevs_pytz()
 
-TIMESTAMP_STYLE = [
-    app_commands.Choice(name=v, value=k)
-    for k, v in {
-        "t": "Short Time",
-        "T": "Long Time",
-        "d": "Short Date",
-        "D": "Long Date",
-        "f": "Short Date Time",
-        "F": "Long Date Time",
-        "R": "Relative Time",
-    }.items()
-]
+_STYLES = {
+    "t": "Short Time",
+    "T": "Long Time",
+    "d": "Short Date",
+    "D": "Long Date",
+    "f": "Short Date Time",
+    "F": "Long Date Time",
+    "R": "Relative Time",
+}
+
+TIMESTAMP_STYLE = [app_commands.Choice(name=v, value=k) for k, v in _STYLES.items()]
 
 
 class DatetimeTransformerError(app_commands.AppCommandError):
@@ -32,7 +31,8 @@ class DatetimeTransformerError(app_commands.AppCommandError):
 
 
 class TimezoneTransformerError(app_commands.AppCommandError):
-    pass
+    def __init__(self, tz_key: str) -> None:
+        self.tz_key = tz_key
 
 
 class DatetimeTransformer(app_commands.Transformer):
@@ -66,8 +66,9 @@ class TimezoneTransformer(app_commands.Transformer):
     ) -> ZoneInfo:
         try:
             tz = ZoneInfo(value)
-        except ZoneInfoNotFoundError as e:
-            raise TimezoneTransformerError(e)
+        except ZoneInfoNotFoundError:
+            raise TimezoneTransformerError(value)
+
         return tz
 
     async def autocomplete(
@@ -101,7 +102,7 @@ class Timestamps(commands.Cog):
                 "box below the format of your choice."
             ),
         )
-        for s in TIMESTAMP_STYLE.keys():
+        for s in _STYLES.keys():
             if style is not None and style.value != s:
                 continue
             formatted_dt = discord.utils.format_dt(dt, style=s)
@@ -150,4 +151,13 @@ class Timestamps(commands.Cog):
     async def timestamp_error(
         self, interaction: discord.Interaction, error: app_commands.AppCommandError
     ) -> None:
-        interaction.extras["error_handled"] = False
+        """Error handler for the timestamp command."""
+
+        if isinstance(error, TimezoneTransformerError):
+            await interaction.response.send_message(
+                f"Could not find the appropriate time zone `{error.tz_key}`. "
+                "Try again by selecting a proposed value.",
+                ephemeral=True,
+            )
+        else:
+            interaction.extras["error_handled"] = False

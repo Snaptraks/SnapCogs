@@ -30,9 +30,14 @@ class CommandTree(app_commands.CommandTree):
         # assume the error is handled by default, unless explicitely set to False
         error_handled = interaction.extras.get("error_handled", True)
 
-        if (command and not command._has_any_error_handlers()) or not error_handled:
+        if (
+            command is None
+            or (command and not command._has_any_error_handlers())
+            or not error_handled
+        ):
             LOGGER.error(
-                f"Ignoring exception in command {repr(command.name)}", exc_info=error,
+                f"Ignoring exception in command {repr(command.name)}",
+                exc_info=error,
             )
         else:
-            LOGGER.error("Ignoring exception in command tree", exc_info=error)
+            LOGGER.debug("Exception in command tree was already handled")

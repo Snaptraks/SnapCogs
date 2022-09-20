@@ -112,4 +112,4 @@ class Bot(commands.Bot):
                 f"Exception {exception} raised in {command}", exc_info=exception
             )
         else:
-            LOGGER.debug(f"Error in command {command} was already handled")
+            LOGGER.debug(f"Exception in command {command} was already handled")
