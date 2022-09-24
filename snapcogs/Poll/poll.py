@@ -3,10 +3,11 @@ from discord import app_commands
 from discord.ext import commands
 
 from . import views
+from ..bot import Bot
 
 
 class Poll(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: Bot) -> None:
         self.bot = bot
 
     poll = app_commands.Group(name="poll", description="Create a poll")
@@ -57,5 +58,7 @@ class Poll(commands.Cog):
         embed, graph = await view.build_embed()
 
         await interaction.followup.send(
-            embed=embed, file=graph, view=view,
+            embed=embed,
+            file=graph,
+            view=view,
         )

@@ -10,6 +10,8 @@ from discord import app_commands
 from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageSequence
 
+from ..bot import Bot
+
 LOGGER = logging.getLogger(__name__)
 COG_PATH = Path(__file__).parent.resolve()
 
@@ -17,7 +19,7 @@ COG_PATH = Path(__file__).parent.resolve()
 class Fun(commands.Cog):
     """Collection of useless but fun commands."""
 
-    def __init__(self, bot):
+    def __init__(self, bot: Bot) -> None:
         self.bot = bot
 
     @app_commands.command(name="8ball")

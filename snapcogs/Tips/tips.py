@@ -7,6 +7,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from . import views
+from ..bot import Bot
 from ..utils import relative_dt
 from ..utils.checks import has_guild_permissions
 from ..utils.views import confirm_prompt
@@ -40,6 +41,12 @@ class Tips(commands.Cog):
         name="tip", description="Save and share tips for people on the server!"
     )
 
+    def __init__(self, bot: Bot) -> None:
+        self.bot = bot
+
+    async def cog_load(self):
+        await self._create_tables()
+
     async def tip_name_autocomplete(
         self, interaction: discord.Interaction, current: str
     ):
@@ -67,12 +74,6 @@ class Tips(commands.Cog):
             f"{len(suggestions)} suggestions"
         )
         return suggestions
-
-    def __init__(self, bot) -> None:
-        self.bot = bot
-
-    async def cog_load(self):
-        await self._create_tables()
 
     @tip.command(name="create")
     async def tip_create(self, interaction: discord.Interaction):
@@ -158,13 +159,18 @@ class Tips(commands.Cog):
 
         try:
             await self._edit_tip(
-                dict(content=modal.content.value, name=new_name, tip_id=tip["tip_id"],)
+                dict(
+                    content=modal.content.value,
+                    name=new_name,
+                    tip_id=tip["tip_id"],
+                )
             )
 
         except aiosqlite.IntegrityError:
             # unique constraint failed
             await interaction.followup.send(
-                f"There is already a tip named `{new_name}` here.", ephemeral=True,
+                f"There is already a tip named `{new_name}` here.",
+                ephemeral=True,
             )
 
         else:
@@ -186,7 +192,8 @@ class Tips(commands.Cog):
 
         embed = (
             discord.Embed(
-                title=f"Tip {tip['name']} Information", color=discord.Color.blurple(),
+                title=f"Tip {tip['name']} Information",
+                color=discord.Color.blurple(),
             )
             .add_field(
                 name="Author", value=f"<@{tip['author_id']}>"

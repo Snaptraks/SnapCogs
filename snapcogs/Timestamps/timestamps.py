@@ -10,6 +10,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from .timezones import abbrevs_pytz
+from ..bot import Bot
 
 TZ_DATA = abbrevs_pytz()
 
@@ -87,7 +88,7 @@ class TimezoneTransformer(app_commands.Transformer):
 
 
 class Timestamps(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Bot) -> None:
         self.bot = bot
 
     def _make_timestamps_embed(

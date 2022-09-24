@@ -7,6 +7,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from ..bot import Bot
 from ..utils.views import confirm_prompt
 
 
@@ -22,7 +23,7 @@ class Link(commands.Cog):
         default_permissions=discord.Permissions(manage_messages=True),
     )
 
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: Bot) -> None:
         self.bot = bot
         self.webhooks: dict[int, discord.Webhook] = defaultdict(
             lambda: None

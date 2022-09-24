@@ -7,6 +7,7 @@ from discord import app_commands
 from discord.ext import commands
 import pint
 
+from ..bot import Bot
 from ..utils import relative_dt, run_process
 
 
@@ -80,11 +81,12 @@ class Information(commands.Cog):
         name="info", description="Get information about something"
     )
 
-    def __init__(self, bot):
+    def __init__(self, bot: Bot) -> None:
         self.bot = bot
 
         self.info_user_context_menu = app_commands.ContextMenu(
-            name="Info", callback=self.info_user_callback,
+            name="Info",
+            callback=self.info_user_callback,
         )
         self.bot.tree.add_command(self.info_user_context_menu)
 
@@ -143,7 +145,8 @@ class Information(commands.Cog):
             ),
         )
         embed.add_field(
-            name="Servers", value=int_fmt(guilds),
+            name="Servers",
+            value=int_fmt(guilds),
         )
         embed.add_field(
             name="Timeline",
@@ -309,7 +312,9 @@ class Information(commands.Cog):
 
         if len(characters) > 1:
             embed.add_field(
-                name="Raw", value=f"`{''.join(rawlist)}`", inline=False,
+                name="Raw",
+                value=f"`{''.join(rawlist)}`",
+                inline=False,
             )
 
         string_literals = "\n".join(
@@ -317,7 +322,9 @@ class Information(commands.Cog):
         )
 
         embed.add_field(
-            name="String Literals", value=string_literals, inline=False,
+            name="String Literals",
+            value=string_literals,
+            inline=False,
         )
 
         await interaction.response.send_message(embed=embed)
@@ -331,7 +338,11 @@ class Information(commands.Cog):
     )
     @app_commands.autocomplete(from_=from_units_autocomplete, to=to_units_autocomplete)
     async def convert(
-        self, interaction: discord.Interaction, value: float, from_: str, to: str,
+        self,
+        interaction: discord.Interaction,
+        value: float,
+        from_: str,
+        to: str,
     ):
         """Convert a value from one unit to another."""
 

@@ -5,6 +5,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from . import views
+from ..bot import Bot
 from ..utils.transformers import BotMessageTransformer
 from ..utils.errors import TransformerMessageNotFound, TransformerNotBotMessage
 
@@ -18,7 +19,7 @@ class Roles(commands.Cog):
         default_permissions=discord.Permissions(manage_roles=True),
     )
 
-    def __init__(self, bot):
+    def __init__(self, bot: Bot) -> None:
         self.bot = bot
         self.persistent_views_loaded = False
 

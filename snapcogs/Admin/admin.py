@@ -8,6 +8,7 @@ from typing import Optional, Literal
 import discord
 from discord.ext import commands
 
+from ..bot import Bot
 from ..utils import cleanup_code
 
 
@@ -18,7 +19,7 @@ def get_syntax_error(e):
 
 
 class Admin(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: Bot) -> None:
         self.bot = bot
 
     async def cog_check(self, ctx):
