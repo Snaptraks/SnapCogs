@@ -122,6 +122,7 @@ async def error_handler(interaction: discord.Interaction, error: Exception):
 Here is a list of the cogs, and their functionalities.
 Application commands (``discord.app_commands.AppCommand``s) are prefixed with the ``/`` character.
 Context menus (right click) are indicated as ``User | Member > command_name`` or ``Message > command_name``, and ``discord.ext.commands.Command``s are left without prefix (you are free to use your own prefix).
+Required arguments in commands are marked with angle brackets ``<>``, and optional ones with square brackets ``[]``.
 
 ### Admin
 
@@ -257,6 +258,19 @@ Example of a roles selection menu:
 
 ![roles example](.github/assets/roles_example.png)
 
+### Timestamps
+
+This cog allows to create nicely formatted Discord timestamps ([example here][timestamp]) from a provided time and time zone.
+The arguments in the following commands all feature autocompletes, so be sure to use them to avoid errors!
+
+> **\>** ``/now [style]``
+>
+> Create timestamps of now to send to get rich formatting.
+
+> **\>** ``/timestamp <datetime> <timezone> [style]``
+>
+> Create timestamps of the given time to send to get rich formatting.
+
 ### Tips
 
 > **\>** ``/tip create``
@@ -364,6 +378,7 @@ The ``snapcog.utils`` package is not a Cog, but rather a collection of useful ob
 The SnapCogs logo was created using the [Unicorn icon created by rddrt - Flaticons][unicorn] and the [Development icons created by Smashicons - Flaticon][cog]
 
 [dpy]: https://github.com/Rapptz/discord.py
+[timestamp]: https://discordpy.readthedocs.io/en/latest/api.html?highlight=format_dt#discord.utils.format_dt
 [zenyatta]: https://github.com/Snaptraks/Zenyatta
 [physbot]: https://github.com/Snaptraks/physbot
 [unicorn]: https://www.flaticon.com/free-icons/unicorn
