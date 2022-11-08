@@ -105,7 +105,20 @@ class Fun(commands.Cog):
 
         await interaction.response.send_message(file=file)
 
-    def _assemble_8ball_image(self, avatar_bytes):
+    @app_commands.command()
+    @app_commands.describe(member="Member for Kirby to eat.")
+    async def kirby(self, interaction: discord.Interaction, member: discord.Member):
+        """Feed a member to Kirby!"""
+
+        _bytes = await asyncio.to_thread(
+            self._assemble_kirby_image,
+            io.BytesIO(await member.display_avatar.read()),
+        )
+        file = discord.File(_bytes, filename="kirby.png")
+
+        await interaction.response.send_message(file=file)
+
+    def _assemble_8ball_image(self, avatar_bytes) -> io.BytesIO:
         # needed files
         avatar = Image.open(avatar_bytes)
         template = Image.open(COG_PATH / "8ball_filter.png")
@@ -126,7 +139,7 @@ class Fun(commands.Cog):
 
         return _bytes
 
-    def _assemble_bonk_image(self, avatar_bytes, text=None):
+    def _assemble_bonk_image(self, avatar_bytes: io.BytesIO, text=None) -> io.BytesIO:
         avatar = Image.open(avatar_bytes)
         template = Image.open(COG_PATH / "bonk_template.png")
 
@@ -162,7 +175,7 @@ class Fun(commands.Cog):
 
         return edited
 
-    def _assemble_lick_gif(self, avatar_bytes):
+    def _assemble_lick_gif(self, avatar_bytes: io.BytesIO) -> io.BytesIO:
         avatar = Image.open(avatar_bytes)
         lick_gif = Image.open(COG_PATH / "lick_template.gif")
         size = (lick_gif.size[1], lick_gif.size[1])
@@ -189,3 +202,18 @@ class Fun(commands.Cog):
         _bytes.seek(0)
 
         return _bytes
+
+    def _assemble_kirby_image(self, avatar_bytes: io.BytesIO) -> io.BytesIO:
+        avatar = Image.open(avatar_bytes)
+        template = Image.open(COG_PATH / "kirby_template.png")
+
+        new = Image.new("RGBA", (464, 351))
+        head = avatar.resize((300, 300))
+        new.paste(head, (164, 51))
+
+        new.paste(template, mask=template)
+
+        edited = io.BytesIO()
+        new.save(edited, format="png")
+        edited.seek(0)
+        return edited
