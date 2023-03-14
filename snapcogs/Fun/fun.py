@@ -28,7 +28,7 @@ class Fun(commands.Cog):
         """Fortune-telling or advice seeking."""
 
         embed = discord.Embed(title="Ask the Magic 8 Ball").set_thumbnail(
-            url="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/twitter/322/pool-8-ball_1f3b1.png"  # noqa: E501
+            url="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/8-Ball_Pool.svg/240px-8-Ball_Pool.svg.png"  # noqa: E501
         )
 
         await interaction.response.defer(thinking=True)
