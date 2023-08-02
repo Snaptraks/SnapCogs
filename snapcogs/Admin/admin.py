@@ -26,73 +26,52 @@ class Admin(commands.Cog):
         return await self.bot.is_owner(ctx.author)
 
     @commands.command()
+    @commands.guild_only()
+    @commands.is_owner()
     async def sync(
-        self,
         ctx: commands.Context,
         guilds: commands.Greedy[discord.Object],
-        spec: Optional[Literal["~"]] = None,
+        spec: Optional[Literal["~", "*", "^"]] = None,
     ) -> None:
         """Sync AppCommands to guilds, or globally.
+        The `spec` argument works as follow:
+            - `None`: to sync all *global* commands within the CommandTree.
+            - `~`: to sync all guild commands for the current context's guild.
+            - `*`: to copy all global commands to the current guild.
+            - `^`: to remove all guild commands from the CommandTree.
+
         Umbra's sync command.
+        https://about.abstractumbra.dev/discord.py/2023/01/29/sync-command-example.html
         """
         if not guilds:
             if spec == "~":
+                synced = await ctx.bot.tree.sync(guild=ctx.guild)
+            elif spec == "*":
                 ctx.bot.tree.copy_global_to(guild=ctx.guild)
-                fmt = await ctx.bot.tree.sync(guild=ctx.guild)
+                synced = await ctx.bot.tree.sync(guild=ctx.guild)
+            elif spec == "^":
+                ctx.bot.tree.clear_commands(guild=ctx.guild)
+                await ctx.bot.tree.sync(guild=ctx.guild)
+                synced = []
             else:
-                fmt = await ctx.bot.tree.sync()
+                synced = await ctx.bot.tree.sync()
 
-            await ctx.reply(
-                f"Synced {len(fmt)} commands "
+            await ctx.send(
+                f"Synced {len(synced)} commands "
                 f"{'globally' if spec is None else 'to the current guild.'}"
             )
             return
 
-        fmt = 0
+        ret = 0
         for guild in guilds:
             try:
                 await ctx.bot.tree.sync(guild=guild)
             except discord.HTTPException:
                 pass
             else:
-                fmt += 1
+                ret += 1
 
-        await ctx.reply(f"Synced the tree to {fmt}/{len(guilds)} guilds.")
-
-    @commands.command()
-    async def clear(
-        self,
-        ctx: commands.Context,
-        guilds: commands.Greedy[discord.Object],
-        spec: Optional[Literal["~"]] = None,
-    ) -> None:
-        """Clear AppCommands of guild, or globally."""
-
-        if not guilds:
-            if spec == "~":
-                ctx.bot.tree.clear_commands(guild=ctx.guild)
-                await ctx.bot.tree.sync(guild=ctx.guild)
-            else:
-                ctx.bot.tree.clear_commands(guild=None)
-                await ctx.bot.tree.sync()
-
-            await ctx.reply(
-                f"Cleared commands "
-                f"{'globally' if spec is None else 'in the current guild.'}"
-            )
-            return
-
-        fmt = 0
-        for guild in guilds:
-            try:
-                ctx.bot.tree.clear_commands(guild=guild)
-                await ctx.bot.tree.sync(guild=guild)
-            except discord.HTTPException:
-                pass
-            else:
-                fmt += 1
-
-        await ctx.reply(f"Cleared the tree of {fmt}/{len(guilds)} guilds.")
+        await ctx.send(f"Synced the tree to {ret}/{len(guilds)}.")
 
     @commands.command()
     @commands.max_concurrency(1, commands.BucketType.channel)
