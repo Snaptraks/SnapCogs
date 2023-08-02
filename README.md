@@ -84,7 +84,7 @@ async def main():
 
 We provide a ``commands.Bot`` subclass that handles the creation of a SQLite database and other utilities needed for the cogs to work properly.
 
-This subclass also provides a custom ``on_command_error`` where errors that are explicitely not handled by the command's or cog's error handler will be logged with the ``logging`` module. This is different from the default behaviour from ``discord.py`` where errors were silenced no matter what when an eror handler was found.
+This subclass also provides a custom ``on_command_error`` where errors that are explicitely not handled by the command's or cog's error handler will be logged with the ``logging`` module. This is different from the default behaviour from ``discord.py`` where errors were silenced no matter what when an error handler was found.
 
 To make sure errors are logged here even when application commands have an error handler, you should use the following pattern for the handler:
 
