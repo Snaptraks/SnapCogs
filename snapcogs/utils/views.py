@@ -21,7 +21,9 @@ class Confirm(ui.View):
         self.stop()
 
     @ui.button(
-        label="Cancel", style=discord.ButtonStyle.gray, emoji="\N{CROSS MARK}",
+        label="Cancel",
+        style=discord.ButtonStyle.gray,
+        emoji="\N{CROSS MARK}",
     )
     async def on_cancel(self, interaction: discord.Interaction, button: ui.Button):
         await interaction.response.send_message("You cancelled!", ephemeral=True)
