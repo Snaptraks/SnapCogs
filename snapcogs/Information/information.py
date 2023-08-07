@@ -163,7 +163,7 @@ class Information(commands.Cog):
         )
         embed.timestamp = discord.utils.utcnow()
 
-        await interaction.response.send_message(embed=embed)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @info.command(name="server")
     async def info_guild(self, interaction: discord.Interaction):
@@ -205,7 +205,7 @@ class Information(commands.Cog):
             ),
         )
 
-        await interaction.response.send_message(embed=embed)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @info.command(name="user")
     @app_commands.describe(user="User or member to get the information of")
@@ -258,7 +258,7 @@ class Information(commands.Cog):
                 inline=False,
             )
 
-        await interaction.response.send_message(embed=embed)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.command()
     @app_commands.describe(
@@ -349,5 +349,5 @@ class Information(commands.Cog):
         quantity = UREG.Quantity(value, from_)
 
         await interaction.response.send_message(
-            f"You converted `{quantity}` to `{quantity.to(to):.3g}`"
+            f"You converted `{quantity}` to `{quantity.to(to):.3g}`", ephemeral=True
         )
