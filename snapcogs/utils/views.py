@@ -1,5 +1,3 @@
-from typing import Optional
-
 import discord
 from discord import ui
 
@@ -8,7 +6,8 @@ from discord import ui
 class Confirm(ui.View):
     def __init__(self):
         super().__init__()
-        self.confirm = None
+        self.value = None
+        self.interaction: discord.Interaction | None = None
 
     @ui.button(
         label="Confirm",
@@ -16,8 +15,8 @@ class Confirm(ui.View):
         emoji="\N{WHITE HEAVY CHECK MARK}",
     )
     async def on_confirm(self, interaction: discord.Interaction, button: ui.Button):
-        await interaction.response.send_message("You confirmed!", ephemeral=True)
-        self.confirm = True
+        self.interaction = interaction
+        self.value = True
         self.stop()
 
     @ui.button(
@@ -26,19 +25,23 @@ class Confirm(ui.View):
         emoji="\N{CROSS MARK}",
     )
     async def on_cancel(self, interaction: discord.Interaction, button: ui.Button):
-        await interaction.response.send_message("You cancelled!", ephemeral=True)
-        self.confirm = False
+        self.interaction = interaction
+        self.value = False
         self.stop()
+
+    def __bool__(self) -> bool:
+        ...
 
 
 # confirm prompt
 async def confirm_prompt(
-    interaction: discord.Interaction, content: Optional[str] = None
-) -> Optional[bool]:
-    """Send a confirmation prompt to the user, and return a bool."""
+    interaction: discord.Interaction, content: str | None = None
+) -> Confirm:
+    """Send a confirmation prompt to the user, and return the Confirm View where
+    you can access the resulting interaction and view.confirm boolean.
+    """
+    confirm = Confirm()
+    await interaction.response.send_message(content, view=confirm, ephemeral=True)
+    await confirm.wait()
 
-    view = Confirm()
-    await interaction.response.send_message(content, view=view, ephemeral=True)
-    await view.wait()
-
-    return view.confirm
+    return confirm
