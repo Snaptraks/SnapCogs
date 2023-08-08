@@ -1,8 +1,10 @@
 import asyncio
+import datetime
+
 import discord
 
 
-def relative_dt(dt):
+def relative_dt(dt: datetime.datetime) -> str:
     """Format the datetime in the relative timestamp form."""
 
     return discord.utils.format_dt(dt, style="R")
