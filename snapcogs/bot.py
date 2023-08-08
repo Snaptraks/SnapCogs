@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 import logging
 
 import aiosqlite
@@ -11,8 +11,12 @@ from .tree import CommandTree
 LOGGER = logging.getLogger(__name__)
 
 
-def _decode_dt(s):
+def _decode_datetime(s):
     return datetime.fromisoformat(s.decode())
+
+
+def _decode_date(s):
+    return date.fromisoformat(s.decode())
 
 
 class Bot(commands.Bot):
@@ -36,8 +40,11 @@ class Bot(commands.Bot):
         aiosqlite.register_converter("BOOLEAN", lambda v: bool(int(v)))
         # register aware datetime type for database
         aiosqlite.register_adapter("DATETIME", lambda dt: dt.isoformat)
-        aiosqlite.register_converter("DATETIME", _decode_dt)
-        aiosqlite.register_converter("TIMESTAMP", _decode_dt)
+        aiosqlite.register_converter("DATETIME", _decode_datetime)
+        aiosqlite.register_converter("TIMESTAMP", _decode_datetime)
+        # register date format
+        aiosqlite.register_adapter("DATE", lambda date: date.isoformat)
+        aiosqlite.register_converter("DATE", _decode_date)
         # allow for cascade deletion
         await self.db.execute("PRAGMA foreign_keys = ON")
 
