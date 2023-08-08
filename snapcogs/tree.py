@@ -36,7 +36,7 @@ class CommandTree(app_commands.CommandTree):
             or not error_handled
         ):
             LOGGER.error(
-                f"Ignoring exception in command {repr(command.name)}",
+                f"Ignoring exception in unknown command ({interaction.data['name']})",
                 exc_info=error,
             )
         else:
