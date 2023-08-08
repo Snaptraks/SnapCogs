@@ -1,19 +1,6 @@
-import logging
-
-import discord
-
 from snapcogs.bot import Bot  # noqa: F401
+from snapcogs.utils.logging import get_logger
 
 __version__ = "0.3.0"
 
-
-LOGGER = logging.getLogger("snapcogs")
-LOG_HANDLER = logging.StreamHandler()
-if discord.utils.stream_supports_colour(LOG_HANDLER.stream):
-    LOG_FORMAT = discord.utils._ColourFormatter()
-else:
-    LOG_FORMAT = logging.Formatter(
-        "%(asctime)s : %(levelname)s : %(name)s : %(message)s"
-    )
-LOG_HANDLER.setFormatter(LOG_FORMAT)
-LOGGER.addHandler(LOG_HANDLER)
+LOGGER = get_logger("snapcogs")
