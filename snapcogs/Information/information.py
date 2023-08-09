@@ -60,18 +60,22 @@ def int_fmt(number, digits=3):
 
 
 class Badge:
-    """From https://github.com/python-discord/bot/blob/80a5b83f4fb0fd1204e051954a3c1b1b914fe7bc/config-default.yml#L43-L53"""  # noqa: E501
-
-    bug_hunter = "<:bug_hunter_lvl1:743882896372269137>"
-    bug_hunter_level_2 = "<:bug_hunter_lvl2:743882896611344505>"
-    early_supporter = "<:early_supporter:743882896909140058>"
-    hypesquad = "<:hypesquad_events:743882896892362873>"
-    hypesquad_balance = "<:hypesquad_balance:743882896460480625>"
-    hypesquad_bravery = "<:hypesquad_bravery:743882896745693335>"
-    hypesquad_brilliance = "<:hypesquad_brilliance:743882896938631248>"
-    partner = "<:partner:748666453242413136>"
-    staff = "<:discord_staff:743882896498098226>"
-    verified_bot_developer = "<:verified_bot_dev:743882897299210310>"
+    active_developer = "<:active_developer:1138853279921610782>"
+    bug_hunter = "<:bug_hunter:1138853282039726150>"
+    bug_hunter_level_2 = "<:bug_hunter_level_2:1138853283209945198>"
+    discord_verified_moderator = "<:discord_certified_moderator:1138853284598259912>"
+    early_supporter = "<:early_supporter:1138853286330511481>"
+    hypesquad = "<:hypesquad:1138853287882403971>"
+    hypesquad_balance = "<:hypesquad_balance:1138853288884850879>"
+    hypesquad_bravery = "<:hypesquad_bravery:1138853290638061599>"
+    hypesquad_brilliance = "<:hypesquad_brilliance:1138853291619532902>"
+    moderator = "<:moderator:1138853620218073138>"
+    partner = "<:partner:1138853621287624795>"
+    partner_server_owner = "<:partner_server_owner:1138853294123536424>"
+    staff = "<:staff:1138853623141503076>"
+    subscriber_nitro = "<:subscriber_nitro:1138853624009732268>"
+    verified = "<:verified:1138853625112838224>"
+    verified_bot_developer = "<:verified_bot_developer:1138853626358534206>"
 
 
 class Information(commands.Cog):
