@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+from typing import LiteralString
 
 import discord
 
@@ -10,7 +11,7 @@ def relative_dt(dt: datetime.datetime) -> str:
     return discord.utils.format_dt(dt, style="R")
 
 
-async def run_process(command):
+async def run_process(command: LiteralString) -> tuple[str, str]:
     """Run a command in shell. To be used carefully!"""
 
     process = await asyncio.create_subprocess_shell(
@@ -23,8 +24,9 @@ async def run_process(command):
     return [output.decode("utf-8", "ignore") for output in result]
 
 
-def cleanup_code(content):
+def cleanup_code(content: str) -> str:
     """Automatically remove code blocks from the code."""
+
     # remove ```py\n```
     if content.startswith("```") and content.endswith("```"):
         return "\n".join(content.split("\n")[1:-1])
