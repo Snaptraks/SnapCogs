@@ -6,6 +6,8 @@ from discord import app_commands
 from discord.ext import commands
 import pint
 
+from ..bot import Bot
+
 
 UREG = pint.UnitRegistry()
 UREG.default_system = None
@@ -52,6 +54,9 @@ async def to_units_autocomplete(
 
 
 class Development(commands.Cog):
+    def __init__(self, bot: Bot) -> None:
+        self.bot = bot
+
     @app_commands.command()
     @app_commands.describe(
         characters="Characters to get the unicode representation of.",
