@@ -156,7 +156,9 @@ class Fun(commands.Cog):
             draw = ImageDraw.Draw(new)
             font = ImageFont.truetype("impact.ttf", 38)
             stroke_width = 2
-            w, h = font.getsize(text, stroke_width=stroke_width)
+            left, top, right, bottom = font.getbbox(text, stroke_width=stroke_width)
+            w = right - left
+            h = bottom - top
             mx, my = (380, 60)  # middle
             x, y = mx - w // 2, my - h // 2
 
