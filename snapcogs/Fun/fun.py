@@ -125,11 +125,11 @@ class Fun(commands.Cog):
         new = Image.new("RGBA", template.size)
 
         # big profile picture
-        big = avatar.resize((375, 375), Image.ANTIALIAS)
+        big = avatar.resize((375, 375), Image.LANCZOS)
         new.paste(big, (349, 70))
 
         # small profile picture
-        small = avatar.resize((204, 204), Image.ANTIALIAS)
+        small = avatar.resize((204, 204), Image.LANCZOS)
         new.paste(small, (105, 301))
 
         new.paste(template, mask=template)
@@ -146,7 +146,7 @@ class Fun(commands.Cog):
         new = Image.new("RGBA", template.size)
 
         # under the bat
-        head = avatar.resize((200, 200), Image.ANTIALIAS)
+        head = avatar.resize((200, 200), Image.LANCZOS)
         new.paste(head, (425, 235))
 
         new.paste(template, mask=template)
