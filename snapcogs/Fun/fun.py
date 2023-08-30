@@ -65,7 +65,7 @@ class Fun(commands.Cog):
         self,
         interaction: discord.Interaction,
         member: discord.Member,
-        text: str = None,
+        text: str | None = None,
     ):
         """Bonk a member, and add a message!"""
 
