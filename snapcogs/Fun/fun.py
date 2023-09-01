@@ -15,6 +15,9 @@ from ..bot import Bot
 LOGGER = logging.getLogger(__name__)
 COG_PATH = Path(__file__).parent.resolve()
 
+_max_img = 256
+MAX_IMG_SIZE = (_max_img, _max_img)
+
 
 class Fun(commands.Cog):
     """Collection of useless but fun commands."""
@@ -125,11 +128,11 @@ class Fun(commands.Cog):
         new = Image.new("RGBA", template.size)
 
         # big profile picture
-        big = avatar.resize((375, 375), Image.LANCZOS)
+        big = avatar.resize((375, 375))
         new.paste(big, (349, 70))
 
         # small profile picture
-        small = avatar.resize((204, 204), Image.LANCZOS)
+        small = avatar.resize((204, 204))
         new.paste(small, (105, 301))
 
         new.paste(template, mask=template)
@@ -146,7 +149,7 @@ class Fun(commands.Cog):
         new = Image.new("RGBA", template.size)
 
         # under the bat
-        head = avatar.resize((200, 200), Image.LANCZOS)
+        head = avatar.resize((200, 200))
         new.paste(head, (425, 235))
 
         new.paste(template, mask=template)
@@ -154,7 +157,7 @@ class Fun(commands.Cog):
         if text is not None:
             # add text
             draw = ImageDraw.Draw(new)
-            font = ImageFont.truetype("impact.ttf", 38)
+            font = ImageFont.truetype("impact.ttf", 46)
             stroke_width = 2
             left, top, right, bottom = font.getbbox(text, stroke_width=stroke_width)
             w = right - left
@@ -171,6 +174,7 @@ class Fun(commands.Cog):
                 stroke_fill=(0, 0, 0),
             )
 
+        new.thumbnail(MAX_IMG_SIZE)
         edited = io.BytesIO()
         new.save(edited, format="png")
         edited.seek(0)
@@ -195,6 +199,7 @@ class Fun(commands.Cog):
             base = Image.new("RGBA", frame.size)
             base.paste(avatar)
             base.paste(frame, mask=frame)
+            base.thumbnail(MAX_IMG_SIZE)
             frames.append(base)
 
         _bytes = io.BytesIO()
@@ -214,6 +219,7 @@ class Fun(commands.Cog):
         new.paste(head, (164, 51))
 
         new.paste(template, mask=template)
+        new.thumbnail(MAX_IMG_SIZE)
 
         edited = io.BytesIO()
         new.save(edited, format="png")
