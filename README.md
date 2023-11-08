@@ -370,6 +370,7 @@ The ``snapcog.utils`` package is not a Cog, but rather a collection of useful ob
 > Exception raised by `BotMessageTransformer` when the provided message was not sent by the bot.
 
 ## Used by
+- [HatBot][hatbot]: Bot for the Hatventures Community Discord server
 - [Zenyatta][zenyatta]: Bot for a single private server
 - [PhysBot][physbot]: Bot for the PHYSUM Discord server
 
@@ -379,6 +380,7 @@ The SnapCogs logo was created using the [Unicorn icon created by rddrt - Flatico
 
 [dpy]: https://github.com/Rapptz/discord.py
 [timestamp]: https://discordpy.readthedocs.io/en/latest/api.html?highlight=format_dt#discord.utils.format_dt
+[hatbot]: https://github.com/Snaptraks/HatBot
 [zenyatta]: https://github.com/Snaptraks/Zenyatta
 [physbot]: https://github.com/Snaptraks/physbot
 [unicorn]: https://www.flaticon.com/free-icons/unicorn
