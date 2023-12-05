@@ -67,6 +67,10 @@ class Bot(commands.Bot):
         await super().close()
 
     async def on_ready(self):
+        if self.user is None:
+            # everything below assumes self.user is not None, so we return
+            # early if it is
+            return
         oauth_url = discord.utils.oauth_url(self.user.id, permissions=self.permissions)
         LOGGER.info(
             f"Logged in as {self.user.name} | discord.py version {discord.__version__}"

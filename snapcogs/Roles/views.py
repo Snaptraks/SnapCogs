@@ -103,7 +103,7 @@ class RolesView(View):
         roles: list[discord.Role],
         *,
         toggle=False,
-        components_id: dict[str, str] = None,
+        components_id: dict[str, str] | None = None,
     ):
         super().__init__(timeout=None)
 
@@ -141,7 +141,8 @@ class RolesView(View):
             await member.remove_roles(*removed_roles)
 
         await interaction.response.send_message(
-            "Cleared your roles.", ephemeral=True,
+            "Cleared your roles.",
+            ephemeral=True,
         )
 
     async def on_error(
