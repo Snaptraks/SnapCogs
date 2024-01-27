@@ -1,11 +1,11 @@
 import asyncio
+import io
 from collections import Counter
 from dataclasses import dataclass
-import io
 
 import discord
-from discord import ui
 import matplotlib.pyplot as plt
+from discord import ui
 
 
 @dataclass
@@ -39,7 +39,13 @@ class PollCreate(ui.Modal, title="Poll Creation"):
 
 
 class PollInput(ui.View):
-    def __init__(self, *, author: discord.Member, modal: ui.Modal, max_values: int):
+    def __init__(
+        self,
+        *,
+        author: discord.User | discord.Member,
+        modal: PollCreate | PollYesNoCreate,
+        max_values: int,
+    ):
         super().__init__(timeout=None)
         self.author = author
         self.question = modal.question

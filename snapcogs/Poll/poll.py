@@ -2,8 +2,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from . import views
 from ..bot import Bot
+from . import views
 
 
 class Poll(commands.Cog):
@@ -40,9 +40,9 @@ class Poll(commands.Cog):
     async def _poll_callback(
         self,
         interaction: discord.Interaction,
-        modal: discord.ui.Modal,
+        modal: views.PollCreate | views.PollYesNoCreate,
         *,
-        max_values: int
+        max_values: int,
     ):
         """Callback for poll creation and sending to the channel."""
 
