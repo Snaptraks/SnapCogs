@@ -7,7 +7,7 @@ class Confirm(ui.View):
     def __init__(self):
         super().__init__()
         self.value = None
-        self.interaction: discord.Interaction | None = None
+        self.interaction: discord.Interaction
 
     @ui.button(
         label="Confirm",
