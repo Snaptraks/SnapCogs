@@ -1,4 +1,5 @@
 import logging
+from datetime import timedelta
 
 import discord
 from discord import app_commands
@@ -35,9 +36,27 @@ class CommandTree(app_commands.CommandTree):
             or (command and not command._has_any_error_handlers())
             or not error_handled
         ):
-            LOGGER.error(
-                f"Ignoring exception in unknown command ({interaction.data['name']})",
-                exc_info=error,
-            )
+            # special case when command is on cooldown
+            if isinstance(error, app_commands.CommandOnCooldown):
+                await self._on_cooldown(interaction, error)
+            else:
+                LOGGER.error(
+                    f"Ignoring exception in command ({interaction.data['name']})",
+                    exc_info=error,
+                )
         else:
             LOGGER.debug("Exception in command tree was already handled")
+
+    async def _on_cooldown(
+        self, interaction: discord.Interaction, error: app_commands.CommandOnCooldown
+    ):
+        retry_in = discord.utils.format_dt(
+            discord.utils.utcnow() + timedelta(seconds=error.retry_after),
+            style="R",
+        )
+        embed = discord.Embed(
+            color=discord.Color.red(),
+            title=f"Command `/{interaction.data['name']}` is on cooldown!",
+            description=f"Try again {retry_in}.",
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
