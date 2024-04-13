@@ -2,8 +2,8 @@ import asyncio
 import io
 import json
 import logging
-from pathlib import Path
 import random
+from pathlib import Path
 
 import discord
 from discord import app_commands
@@ -72,8 +72,14 @@ class Fun(commands.Cog):
     ):
         """Bonk a member, and add a message!"""
 
+        if member == member.guild.me:
+            content = "Ha! I'm not bonking myself, I'm not an idiot."
+        else:
+            content = None
+
         await interaction.response.send_message(
-            file=await self.create_bonk_file(member, text)
+            content=content,
+            file=await self.create_bonk_file(member, text),
         )
 
     @bonk.error
@@ -88,11 +94,18 @@ class Fun(commands.Cog):
         else:
             interaction.extras["error_handled"] = False
 
-    async def create_bonk_file(self, member, text=None):
+    async def create_bonk_file(
+        self, member: discord.Member, text: str | None = None
+    ) -> discord.File:
         """Common funtion to fetch the member avatar, and create the file to send."""
 
         avatar = io.BytesIO(await member.display_avatar.read())
-        _bytes = await asyncio.to_thread(self._assemble_bonk_image, avatar, text)
+        if member == member.guild.me:
+            # self bonk
+            _bytes = await asyncio.to_thread(self._assemble_self_bonk_image, avatar)
+        else:
+            _bytes = await asyncio.to_thread(self._assemble_bonk_image, avatar, text)
+
         return discord.File(_bytes, filename="bonk.png")
 
     @app_commands.command()
@@ -177,6 +190,23 @@ class Fun(commands.Cog):
         new.thumbnail(MAX_IMG_SIZE)
         edited = io.BytesIO()
         new.save(edited, format="png")
+        edited.seek(0)
+
+        return edited
+
+    def _assemble_self_bonk_image(self, avatar_bytes: io.BytesIO) -> io.BytesIO:
+        avatar = Image.open(avatar_bytes)
+        template = Image.open(COG_PATH / "self_bonk.png")
+
+        avatar_left = avatar.resize((250, 250))
+        avatar_right = avatar_left.transpose(Image.FLIP_LEFT_RIGHT)
+
+        template.paste(avatar_left, (175, -20), mask=avatar_left)
+        template.paste(avatar_right, (1028, 16), mask=avatar_right)
+
+        template.thumbnail(MAX_IMG_SIZE)
+        edited = io.BytesIO()
+        template.save(edited, format="png")
         edited.seek(0)
 
         return edited
