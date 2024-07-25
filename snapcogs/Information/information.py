@@ -13,22 +13,22 @@ def int_fmt(number, digits=3):
 
 
 class Badge:
-    active_developer = "<:active_developer:1138853279921610782>"
-    bug_hunter = "<:bug_hunter:1138853282039726150>"
-    bug_hunter_level_2 = "<:bug_hunter_level_2:1138853283209945198>"
-    discord_verified_moderator = "<:discord_certified_moderator:1138853284598259912>"
-    early_supporter = "<:early_supporter:1138853286330511481>"
-    hypesquad = "<:hypesquad:1138853287882403971>"
-    hypesquad_balance = "<:hypesquad_balance:1138853288884850879>"
-    hypesquad_bravery = "<:hypesquad_bravery:1138853290638061599>"
-    hypesquad_brilliance = "<:hypesquad_brilliance:1138853291619532902>"
-    moderator = "<:moderator:1138853620218073138>"
-    partner = "<:partner:1138853621287624795>"
-    partner_server_owner = "<:partner_server_owner:1138853294123536424>"
-    staff = "<:staff:1138853623141503076>"
-    subscriber_nitro = "<:subscriber_nitro:1138853624009732268>"
-    verified = "<:verified:1138853625112838224>"
-    verified_bot_developer = "<:verified_bot_developer:1138853626358534206>"
+    active_developer = "<:active_developer:1266092694506311843>"
+    bug_hunter = "<:bug_hunter:1266092708460499044>"
+    bug_hunter_level_2 = "<:bug_hunter_level_2:1266092721475686432>"
+    discord_verified_moderator = "<:discord_certified_moderator:1266092743122354276>"
+    early_supporter = "<:early_supporter:1266092753692000448>"
+    hypesquad = "<:hypesquad:1266092765566210171>"
+    hypesquad_balance = "<:hypesquad_balance:1266092776827654286>"
+    hypesquad_bravery = "<:hypesquad_bravery:1266092787267272784>"
+    hypesquad_brilliance = "<:hypesquad_brilliance:1266092800173150209>"
+    moderator = "<:moderator:1266092811208364175>"
+    partner = "<:partner:1266092818628214906>"
+    partner_server_owner = "<:partner_server_owner:1266092826249396396>"
+    staff = "<:staff:1266092833744490526>"
+    subscriber_nitro = "<:subscriber_nitro:1266092840895647855>"
+    verified = "<:verified:1266092849573920779>"
+    verified_bot_developer = "<:verified_bot_developer:1266092858813714442>"
 
 
 class Information(commands.Cog):
