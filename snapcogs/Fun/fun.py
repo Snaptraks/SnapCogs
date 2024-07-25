@@ -26,6 +26,7 @@ class Fun(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name="8ball")
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.describe(question="What do you want to ask the Magic 8 Ball?")
     async def _8ball(self, interaction: discord.Interaction, question: str):
         """Fortune-telling or advice seeking."""
@@ -63,6 +64,7 @@ class Fun(commands.Cog):
             await interaction.followup.send(embed=embed, file=file)
 
     @app_commands.command()
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.describe(member="Member to bonk.", text="Text to add to the image.")
     async def bonk(
         self,
@@ -109,6 +111,7 @@ class Fun(commands.Cog):
         return discord.File(_bytes, filename="bonk.png")
 
     @app_commands.command()
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.describe(member="Member to lick.")
     async def lick(self, interaction: discord.Interaction, member: discord.Member):
         """Lick a member! It's not as lewd as it sounds..."""
@@ -122,6 +125,7 @@ class Fun(commands.Cog):
         await interaction.response.send_message(file=file)
 
     @app_commands.command()
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.describe(member="Member for Kirby to eat.")
     async def kirby(self, interaction: discord.Interaction, member: discord.Member):
         """Feed a member to Kirby!"""
