@@ -225,7 +225,7 @@ class Fun(commands.Cog):
         draw.ellipse((0, 0) + size, fill=(0, 0, 0, 255))
         avatar = ImageOps.fit(avatar, mask.size)
 
-        frames = []
+        frames: list[Image.Image] = []
         for frame in ImageSequence.Iterator(lick_gif):
             frame = frame.convert("RGBA")
             box = (frame.size[0] - frame.size[1] - 50, 0, *frame.size)
@@ -238,7 +238,12 @@ class Fun(commands.Cog):
 
         _bytes = io.BytesIO()
         frames[0].save(
-            _bytes, save_all=True, append_images=frames[1:], loop=0, format="gif"
+            _bytes,
+            save_all=True,
+            append_images=frames[1:],
+            disposal=2,
+            loop=0,
+            format="gif",
         )
         _bytes.seek(0)
 
