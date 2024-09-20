@@ -3,7 +3,6 @@ import datetime
 import itertools
 import logging
 import random
-from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
@@ -11,24 +10,19 @@ import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 from discord.utils import format_dt
+from sqlalchemy import delete, select
 
 from snapcogs import Bot
 from snapcogs.utils import relative_dt
-from snapcogs.utils.db import read_sql_query
 from snapcogs.utils.views import confirm_prompt
+
+from .models import Birthday
 
 LOGGER = logging.getLogger(__name__)
 SQL = Path(__file__).parent / "sql"
 
 
 EMBED_COLOR = 0xFFD700
-
-
-@dataclass
-class Birthday:
-    birthday: datetime.date
-    guild_id: int
-    user_id: int
 
 
 class Month(Enum):
@@ -69,37 +63,36 @@ class Announcements(commands.Cog):
         self.bot = bot
 
     async def cog_load(self):
-        await self._create_tables()
         self.birthday_announcement.start()
 
     async def cog_unload(self):
         self.birthday_announcement.cancel()
 
-    @tasks.loop(time=datetime.time(hour=12, tzinfo=datetime.UTC))
+    # @tasks.loop(time=datetime.time(hour=12, tzinfo=datetime.UTC))
+    @tasks.loop(count=1)
     async def birthday_announcement(self):
         """Accounce the birthday of a member.
         Birthdays need to be registered by the member beforehand
         with the `/birthday register` command.
         """
-        birthdays = await self._get_today_birthday()
+        birthdays = await self._get_today_birthdays()
         LOGGER.debug(f"Found {len(birthdays)} birthdays for today")
 
-        if len(birthdays) != 0:
-            for bday in birthdays:
-                guild = self.bot.get_guild(bday.guild_id)
-                if guild is None:
-                    # Bot left the guild maybe?
-                    continue
-                try:
-                    member = await guild.fetch_member(bday.user_id)
-                    guild.get_member
-                    # if we bring back the Birthday role,
-                    # this needs to be called as a task
-                    asyncio.create_task(self.birthday_task(member))
-                except discord.NotFound:
-                    LOGGER.error(
-                        f"Member {bday.user_id} was not found in guild {guild.id}."
-                    )
+        for bday in birthdays:
+            guild = await self.bot.fetch_guild(bday.guild_id)
+            if guild is None:
+                # Bot left the guild maybe?
+                continue
+            try:
+                member = await guild.fetch_member(bday.user_id)
+                guild.get_member
+                # if we bring back the Birthday role,
+                # this needs to be called as a task
+                asyncio.create_task(self.birthday_task(member))
+            except discord.NotFound:
+                LOGGER.error(
+                    f"Member {bday.user_id} was not found in guild {guild.id}."
+                )
 
     @birthday_announcement.before_loop
     async def birthday_announcement_before(self):
@@ -142,9 +135,7 @@ class Announcements(commands.Cog):
 
         for reaction in reactions:
             await message.add_reaction(reaction)
-        # await member.add_roles(self.birthday_role, reason="Birthday!")
-        # await asyncio.sleep(24 * 3600)  # 24 hours
-        # await member.remove_roles(self.birthday_role)
+            await asyncio.sleep(0.5)  # avoid rate limits
 
     @birthday.command(name="register")
     @app_commands.describe(month="Month of the year", day="Day of the month (1-31)")
@@ -213,6 +204,7 @@ class Announcements(commands.Cog):
                 ephemeral=True,
             )
             return
+
         next_guild_birthdays = sorted(
             guild_birthdays, key=lambda x: get_next_occurence(x.birthday)
         )
@@ -307,9 +299,11 @@ class Announcements(commands.Cog):
             )
             return
 
+        next_occurence = get_next_occurence(birthday.birthday)
         confirm = await confirm_prompt(
             interaction,
-            "Are you sure you want to delete your birthday? "
+            "Are you sure you want to delete your birthday on "
+            f"{discord.utils.format_dt(next_occurence, 'D')}? "
             "You can register it again later.",
         )
 
@@ -326,98 +320,73 @@ class Announcements(commands.Cog):
             content = "Deleting your birthday!"
 
         else:
-            next_occurence = get_next_occurence(birthday.birthday)
             content = f"Keeping your birthday. See you {relative_dt(next_occurence)}!"
 
         await confirm.interaction.response.send_message(content, ephemeral=True)
 
-    async def _create_tables(self):
-        """Create the necessary DB tables if they do not exist."""
-
-        await self.bot.db.execute(read_sql_query(SQL / "create_tables.sql"))
-
-        await self.bot.db.commit()
-
     async def _get_guild_birthdays(self, guild: discord.Guild) -> list[Birthday]:
         """Get a guild's birthdays."""
 
-        rows = await self.bot.db.execute_fetchall(
-            read_sql_query(SQL / "get_guild_birthdays.sql"),
-            dict(guild_id=guild.id),
-        )
+        async with self.bot.db.session() as session:
+            birthdays = await session.scalars(
+                select(Birthday).where(Birthday.guild_id == guild.id)
+            )
 
-        return [Birthday(**row) for row in rows]
+        return list(birthdays)
 
     async def _get_member_birthday(self, member: discord.Member) -> Birthday | None:
         """Get a member's birthday."""
 
-        async with self.bot.db.execute(
-            read_sql_query(SQL / "get_member_birthday.sql"),
-            dict(user_id=member.id, guild_id=member.guild.id),
-        ) as c:
-            row = await c.fetchone()
+        async with self.bot.db.session() as session:
+            birthday = await session.scalar(
+                select(Birthday).where(
+                    Birthday.guild_id == member.guild.id,
+                    Birthday.user_id == member.id,
+                )
+            )
 
-        return Birthday(**row) if row is not None else None
+        return birthday
 
-    async def _get_today_birthday(
+    async def _get_today_birthdays(
         self, guild: discord.Guild | None = None
     ) -> list[Birthday]:
         """Return a list of today's birthdays.
-        The list is empty is there is none.
+        The list is empty if there is none.
         """
-        if guild is None:
-            rows = await self.bot.db.execute_fetchall(
-                "SELECT * FROM announcements_birthday"
-            )
 
-        else:
-            rows = await self.bot.db.execute_fetchall(
-                read_sql_query(SQL / "get_guild_birthdays.sql"),
-                dict(guild_id=guild.id),
-            )
+        async with self.bot.db.session() as session:
+            today = discord.utils.utcnow().date()
+            query = select(Birthday).where(Birthday.birthday == today.replace(year=4))
+            if guild is not None:
+                query = query.where(Birthday.guild_id == guild.id)
+            birthdays = await session.scalars(query)
 
-        birthdays = []
-        today = datetime.date.today()
-        for row in rows:
-            birthday = Birthday(**row)
-            if (
-                birthday.birthday.day,
-                birthday.birthday.month,
-            ) == (
-                today.day,
-                today.month,
-            ):
-                birthdays.append(birthday)
+        return list(birthdays)
 
-        return birthdays
-
-    async def _is_already_registered(self, member: discord.Member) -> bool:
-        """Verify if a member has registered a birthday already."""
-
-        async with self.bot.db.execute(
-            read_sql_query(SQL / "is_already_registered.sql"),
-            dict(user_id=member.id, guild_id=member.guild.id),
-        ) as c:
-            row = await c.fetchone()
-
-        if row:
-            return bool(row[0])
-        return False
-
-    async def _save_birthday(self, member: discord.Member, birthday: datetime.date):
+    async def _save_birthday(
+        self, member: discord.Member, birthday: datetime.date
+    ) -> None:
         """Save the birthday to the database."""
 
-        await self.bot.db.execute(
-            read_sql_query(SQL / "save_birthday.sql"),
-            dict(user_id=member.id, guild_id=member.guild.id, birthday=birthday),
-        )
-        await self.bot.db.commit()
+        async with self.bot.db.session() as session:
+            async with session.begin():
+                session.add(
+                    Birthday(
+                        birthday=birthday,
+                        guild_id=member.guild.id,
+                        user_id=member.id,
+                    )
+                )
 
-    async def _delete_birthday(self, member: discord.Member):
+    async def _delete_birthday(self, member: discord.Member) -> None:
         """Remove the member's birthday from the database."""
 
-        await self.bot.db.execute(
-            read_sql_query(SQL / "delete_birthday.sql"),
-            dict(user_id=member.id, guild_id=member.guild.id),
-        )
-        await self.bot.db.commit()
+        async with self.bot.db.session() as session:
+            await session.execute(
+                delete(Birthday).where(
+                    Birthday.guild_id == member.guild.id,
+                    Birthday.user_id == member.id,
+                )
+            )
+            await session.commit()
+        LOGGER.debug(f"Birthday deleted for {member}")
