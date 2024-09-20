@@ -127,6 +127,11 @@ class Information(commands.Cog):
         """View information about the current server."""
 
         guild = interaction.guild
+        if guild is None:
+            return await interaction.response.send_message(
+                "Cannot use this command in private messages.", ephemeral=True
+            )
+
         embed = discord.Embed(title=guild.name, color=discord.Color.blurple())
         description = f"Server created {relative_dt(guild.created_at)}."
         if guild.description:
