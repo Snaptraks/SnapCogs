@@ -103,3 +103,19 @@ class Bot(commands.Bot):
             )
         else:
             LOGGER.debug(f"Exception in command {command} was already handled")
+
+    async def get_or_fetch_member(
+        self, guild: discord.Guild, member_id: int
+    ) -> discord.Member | None:
+        """Look up a member in cache, or fetches if not found."""
+
+        member = guild.get_member(member_id)
+        if member is not None:
+            return member
+
+        members = await guild.query_members(limit=1, user_ids=[member_id])
+
+        if len(members) == 0:
+            return None
+
+        return members[0]
