@@ -50,33 +50,6 @@ class Tips(commands.Cog):
 
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
-        self._add_dummy.start()
-
-    @tasks.loop(count=1)
-    async def _add_dummy(self):
-        tips = []
-        for author in (337266376941240320, 239215575576870914, 287612075260510208, 0):
-            for _ in range(random.randint(2, 5)):
-                tips.append(
-                    Tip(
-                        author_id=author,
-                        content="Dummy tip",
-                        created_at=discord.utils.utcnow(),
-                        guild_id=588171715960635393,
-                        last_edited=discord.utils.utcnow(),
-                        name="".join(random.choices(string.ascii_lowercase, k=5)),
-                        uses=random.randint(1, 10),
-                    )
-                )
-
-        for tip in tips:
-            await self._save_tip(tip)
-
-    @_add_dummy.before_loop
-    async def _wait(self):
-        LOGGER.warning("Dummy tips added to DB for testing. Remember to remove.")
-        await self.bot.wait_until_ready()
-        await asyncio.sleep(1)
 
     async def tip_name_autocomplete(
         self, interaction: discord.Interaction, current: str
