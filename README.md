@@ -210,24 +210,6 @@ By default, members need the `Manage Messages` permission to be able to use the 
 >
 > Check the links between this channel and the others from the group.
 
-### Poll
-
-> **\>** ``/poll single``
->
-> Send a modal to the command author to create a single-choice poll, then send the poll to the channel the command was invoked in.
-
-> **\>** ``/poll multiple``
->
-> Send a modal to the command author to create a multiple-choice poll, then send the poll to the channel the command was invoked in.
-
-> **\>** ``/poll yes-no``
->
-> Shortcut for a single-choice poll with the options filled in with Yes or No automatically.
-
-Example of a poll:
-
-![poll example](.github/assets/poll_example.png)
-
 ### Roles
 
 > **\>** ``/roles select [channel] [content]``
