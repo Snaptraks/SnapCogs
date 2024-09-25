@@ -1,6 +1,8 @@
 import discord
 from discord import ui
 
+from .models import Tip
+
 
 class TipCreate(ui.Modal, title="Tip Creation"):
     name = ui.TextInput(label="Name", placeholder="How do you want to name your tip?")
@@ -15,10 +17,7 @@ class TipCreate(ui.Modal, title="Tip Creation"):
 
 
 class TipEdit(TipCreate, title="Tip Edit"):
-    def __init__(self, tip) -> None:
+    def __init__(self, tip: Tip) -> None:
         super().__init__()
-        self.name.default = tip["name"]
-        self.content.default = tip["content"]
-
-    async def on_submit(self, interaction: discord.Interaction):
-        await interaction.response.defer()
+        self.name.default = tip.name
+        self.content.default = tip.content
