@@ -1,6 +1,7 @@
-aiosqlite>=0.17.0
+aiosqlite>=0.20.0
 python-dateutil>=2.0
 discord.py>=2.4
 Pillow>=9.0
 pint>=0.19
 pytz
+SQLAlchemy==2.0.35
