@@ -30,7 +30,7 @@ class Confirm(ui.View):
         self.stop()
 
     def __bool__(self) -> bool:
-        ...
+        return self.value or False
 
 
 # confirm prompt
