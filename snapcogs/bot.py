@@ -12,11 +12,10 @@ LOGGER = logging.getLogger(__name__)
 
 class Bot(commands.Bot):
     def __init__(self, *args, **kwargs):
-        self.db_name = kwargs.get("db_name", ":memory:")
+        self.db_name = kwargs.get("db_name", None)
         self.permissions = kwargs.get("permissions", discord.Permissions.text())
         self.startup_extensions = kwargs.get("startup_extensions", [])
         kwargs["tree_cls"] = kwargs.get("tree_cls", CommandTree)
-        self.started: bool = False
         super().__init__(*args, **kwargs)
 
     async def setup_hook(self):
@@ -24,7 +23,7 @@ class Bot(commands.Bot):
         self.http_session = aiohttp.ClientSession()
 
         # Make DB connection
-        self.db = Database()
+        self.db = Database(self.db_name)
 
         for extension in self.startup_extensions:
             try:
@@ -34,6 +33,8 @@ class Bot(commands.Bot):
                 LOGGER.error(error, exc_info=error)
             else:
                 LOGGER.debug(f"{extension} loaded successfully.")
+
+        await self.db.initialise_database()
 
         self.boot_time = discord.utils.utcnow()
 
@@ -62,10 +63,6 @@ class Bot(commands.Bot):
             f"{oauth_url}\n"
             "--------"
         )
-
-        if not self.started:
-            await self.db.initialise_database()
-            self.started = True
 
     async def on_command_error(
         self, ctx: commands.Context, exception: commands.CommandError, /
