@@ -11,7 +11,6 @@ class Tip(Base):
     __tablename__ = "tips_tip"
     __table_args__ = (UniqueConstraint("guild_id", "name"),)
 
-    id: Mapped[int] = mapped_column(primary_key=True)
     author_id: Mapped[int]
     content: Mapped[str]
     created_at: Mapped[datetime]
