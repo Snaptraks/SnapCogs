@@ -1,10 +1,10 @@
 import logging
+from collections.abc import Iterable
 from secrets import token_hex
 
 import discord
-from discord import ButtonStyle
-from discord.ui import View, Button, Select, Item
-
+from discord import ButtonStyle, Color
+from discord.ui import Button, Item, Select, View
 
 LOGGER = logging.getLogger(__name__)
 
@@ -15,6 +15,7 @@ class RolesCreateSelect(Select):
     def __init__(self, roles: list[discord.Role]):
         options = [discord.SelectOption(label=role.name) for role in roles]
         self._roles = roles
+        self.view: RolesCreateView
         super().__init__(
             placeholder="Select roles from the available list.",
             options=options,
@@ -22,8 +23,11 @@ class RolesCreateSelect(Select):
         )
 
     async def callback(self, interaction: discord.Interaction):
+        selected_roles = [
+            discord.utils.get(self._roles, name=value) for value in self.values
+        ]
         self.view.selected_roles = sorted(
-            [discord.utils.get(self._roles, name=value) for value in self.values],
+            [r for r in selected_roles if r is not None],
             reverse=True,
         )
         await interaction.response.defer()
@@ -32,6 +36,8 @@ class RolesCreateSelect(Select):
 
 class RolesCreateView(View):
     """View sent to create a roles selection menu for members."""
+
+    selected_roles: list[discord.Role]
 
     def __init__(self, roles: list[discord.Role], *, author: discord.Member):
         super().__init__()
@@ -46,26 +52,31 @@ class RolesCreateView(View):
 
 
 class RolesSelect(Select):
-    placeholder = "Select roles"
+    """Select menu with the list of assignable roles."""
 
-    def __init__(self, roles, *, toggle: bool, custom_id: str):
+    def __init__(self, roles: Iterable[discord.Role], *, toggle: bool, custom_id: str):
         roles = sorted(roles, reverse=True)
         options = [discord.SelectOption(label=role.name) for role in roles]
         self._roles = roles
         super().__init__(
-            placeholder=self.placeholder,
+            placeholder="Select roles",
             options=options,
             max_values=1 if toggle else len(options),
             custom_id=custom_id,
         )
 
     async def callback(self, interaction: discord.Interaction):
-        # guild = interaction.guild
+        """Edit the roles of the member, removing unselected roles
+        and adding the selected ones
+        """
+
         member = interaction.user
+        assert isinstance(member, discord.Member)
 
         selected_roles = [
             discord.utils.get(self._roles, name=value) for value in self.values
         ]
+        selected_roles = [r for r in selected_roles if r is not None]
         added_roles = [role for role in selected_roles if role not in member.roles]
         removed_roles = [
             role
@@ -91,16 +102,18 @@ class RolesSelect(Select):
                     "Setting your roles to "
                     f"{', '.join(r.name for r in selected_roles)}."
                 ),
-                color=discord.Color.green(),
+                color=Color.green(),
             ),
             ephemeral=True,
         )
 
 
 class RolesView(View):
+    """User facing View where they can select roles to assign themselves."""
+
     def __init__(
         self,
-        roles: list[discord.Role],
+        roles: Iterable[discord.Role],
         *,
         toggle=False,
         components_id: dict[str, str] | None = None,
@@ -130,7 +143,10 @@ class RolesView(View):
         self.add_item(clear)
 
     async def clear_callback(self, interaction: discord.Interaction):
+        """Remove the roles in the select menu from the member."""
+
         member = interaction.user
+        assert isinstance(member, discord.Member)
         removed_roles = [r for r in self.roles if r in member.roles]
 
         if removed_roles:
@@ -141,16 +157,22 @@ class RolesView(View):
             await member.remove_roles(*removed_roles)
 
         await interaction.response.send_message(
-            "Cleared your roles.",
+            embed=discord.Embed(
+                title=("Cleared your roles."),
+                color=Color.green(),
+            ),
             ephemeral=True,
         )
 
     async def on_error(
-        self, error: Exception, item: Item, interaction: discord.Interaction
+        self, interaction: discord.Interaction, error: Exception, item: Item
     ):
         if isinstance(error, KeyError):
             await interaction.response.send_message(
-                "There was an error. You need to select at least one role.",
+                embed=discord.Embed(
+                    title="There was an error, you need to select at least one role.",
+                    color=Color.red(),
+                ),
                 ephemeral=True,
             )
         else:

@@ -3,11 +3,13 @@ import logging
 import discord
 from discord import app_commands
 from discord.ext import commands
+from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 
-from . import views
 from ..bot import Bot
-from ..utils.transformers import BotMessageTransformer
 from ..utils.errors import TransformerMessageNotFound, TransformerNotBotMessage
+from ..utils.transformers import BotMessageTransformer
+from . import models, views
 
 LOGGER = logging.getLogger(__name__)
 
@@ -23,76 +25,101 @@ class Roles(commands.Cog):
         self.bot = bot
         self.persistent_views_loaded = False
 
-    async def cog_load(self):
-        await self._create_tables()
-
     @commands.Cog.listener()
-    async def on_ready(self):
+    async def on_ready(self) -> None:
+        """Load the persistent Views once, when the guild data is loaded in the bot."""
+
         if not self.persistent_views_loaded:
             await self.load_persistent_views()  # needs guild data, so we load this here
             self.persistent_views_loaded = True
 
-    async def load_persistent_views(self):
-        for view_data in await self._get_all_views():
-            view = await self.build_view(view_data)
+    async def load_persistent_views(self) -> None:
+        """Load all persistent Views."""
+
+        for view_model in await self._get_all_views():
+            view = await self.build_view(view_model)
             if view is not None:
                 self.bot.add_view(
                     view,
-                    message_id=view_data["message_id"],
+                    message_id=view_model.message_id,
                 )
 
-    async def save_persistent_view(self, view, message):
-        view_payload = dict(
-            guild_id=message.guild.id, message_id=message.id, toggle=view.toggle
+    async def save_persistent_view(
+        self, view: views.RolesView, message: discord.Message
+    ) -> None:
+        """Save a persistent View to the database."""
+
+        assert message.guild is not None
+
+        roles_view_model = models.View(
+            guild_id=message.guild.id,
+            message_id=message.id,
+            toggle=view.toggle,
         )
 
-        view_id = await self._save_view(view_payload)
-
-        components_payload = [
-            dict(name=key, component_id=val, view_id=view_id)
+        roles_view_model.components = [
+            models.Component(
+                name=key,
+                component_id=val,
+            )
             for key, val in view.components_id.items()
         ]
-        await self._save_components(components_payload)
 
-        roles_payload = [dict(role_id=role.id, view_id=view_id) for role in view.roles]
-        await self._save_roles(roles_payload)
+        roles_view_model.roles = [
+            models.Role(
+                role_id=role.id,
+            )
+            for role in view.roles
+        ]
 
-    async def build_view(self, view_data):
-        guild = self.bot.get_guild(view_data["guild_id"])
+        await self._save_view(roles_view_model)
+
+    async def build_view(self, view_model: models.View) -> views.RolesView | None:
+        """Build a Discord View from database information."""
+
+        guild = self.bot.get_guild(view_model.guild_id)
+
         if guild is None:
             # skip if we cannot find the guild (ie. the bot left the guild)
             return None
 
         # get the roles
-        roles = [
-            guild.get_role(row["role_id"])
-            for row in await self._get_roles(view_data["view_id"])
-        ]
+        roles = [guild.get_role(role.role_id) for role in view_model.roles]
+        roles = [r for r in roles if r is not None]  # remove None (missing roles)
 
         # get the components id
         components_id = {
-            row["name"]: row["component_id"]
-            for row in await self._get_components(view_data["view_id"])
+            component.name: component.component_id
+            for component in view_model.components
         }
 
-        toggle = view_data["toggle"]
+        toggle = view_model.toggle
 
         view = views.RolesView(roles, toggle=toggle, components_id=components_id)
 
         return view
 
     async def roles_creation_selection(
-        self, interaction: discord.Interaction
+        self,
+        interaction: discord.Interaction,
+        available_roles: list[discord.Role] | None = None,
+        ignored_roles: list[discord.Role] | None = None,
     ) -> list[discord.Role]:
         """Send a selection menu to chose from the guild's roles."""
 
         guild = interaction.guild
-        # ignore @everyone, managed roles, and roles above the bot's top role
-        available_roles = [
-            r
-            for r in reversed(guild.roles[1:])
-            if (r < guild.me.top_role) and not r.managed
-        ]
+        assert guild is not None
+        assert isinstance(interaction.user, discord.Member)
+        if available_roles is None:
+            # ignore @everyone, managed roles, and roles above the bot's top role
+            available_roles = [
+                r
+                for r in reversed(guild.roles[1:])
+                if (r < guild.me.top_role) and not r.managed
+            ]
+
+        if ignored_roles is not None:
+            available_roles = [r for r in available_roles if r not in ignored_roles]
 
         view = views.RolesCreateView(available_roles, author=interaction.user)
         await interaction.response.send_message(view=view)
@@ -111,15 +138,17 @@ class Roles(commands.Cog):
     async def roles_creation_callback(
         self,
         interaction: discord.Interaction,
-        channel: discord.TextChannel,
+        channel: discord.TextChannel | None,
         content: str,
         *,
         toggle: bool,
-    ):
+    ) -> None:
         """Generic callback to create a roles selection menu."""
 
         if channel is None:
-            channel = interaction.channel
+            channel = interaction.channel  # type: ignore
+
+        assert channel is not None
 
         selected_roles = await self.roles_creation_selection(interaction)
 
@@ -127,64 +156,20 @@ class Roles(commands.Cog):
         message = await channel.send(content=content, view=view)
         await self.save_persistent_view(view, message)
 
-    def roles_add_remove(self, method):
-        async def execute(message, roles):
-            view_data = await self._get_view_from_message(message)
-            LOGGER.debug(f"{method}d roles for view_id {view_data['view_id']}")
-
-            rows = await self._get_roles(view_data["view_id"])
-            current_roles = {row["role_id"] for row in rows}
-            # if method == "save"
-            dismissed_roles = [r for r in roles if r.id in current_roles]
-            roles = [r for r in roles if r.id not in current_roles]
-
-            if method == "delete":
-                # if we remove / delete the role from the menu, we want to remove roles
-                # that are in the menu, and dismiss those that are not
-                roles, dismissed_roles = dismissed_roles, roles
-
-            dismissed_roles_str = ", ".join(r.mention for r in dismissed_roles)
-
-            await getattr(self, f"_{method}_roles")(
-                [dict(role_id=role.id, view_id=view_data["view_id"]) for role in roles]
-            )
-            LOGGER.debug(f"Editing message {message.id}")
-            await message.edit(view=await self.build_view(view_data))
-
-            roles_str = ", ".join(role.mention for role in roles)
-            verb = dict(delete="removed from", save="added to")
-            embed = discord.Embed(
-                color=discord.Color.green(),
-                title="Successfully edited selection.",
-                description=(
-                    f"Role(s) {roles_str} {verb[method]} the "
-                    f"[message]({message.jump_url})."
-                ),
-            )
-            if method == "save" and dismissed_roles:
-                embed.add_field(
-                    name="The following roles were already in the menu:",
-                    value=dismissed_roles_str,
-                )
-
-            return embed
-
-        return execute
-
     @roles.command(name="select")
     @app_commands.describe(
         channel=(
             "Channel to send the roles selection menu to. "
             "Defaults to current channel."
         ),
-        content="Text to send with the roles selection menu",
+        content="Text in the message to send with the roles selection menu.",
     )
-    async def _roles_select(
+    async def roles_select(
         self,
         interaction: discord.Interaction,
-        channel: discord.TextChannel = None,
+        channel: discord.TextChannel | None = None,
         content: str = "Select from the following roles:",
-    ):
+    ) -> None:
         """Create a role selection menu, to select many roles from the list."""
 
         await self.roles_creation_callback(interaction, channel, content, toggle=False)
@@ -195,14 +180,14 @@ class Roles(commands.Cog):
             "Channel to send the roles selection menu to. "
             "Defaults to current channel."
         ),
-        content="Text to send with the roles selection menu",
+        content="Text in the message to send with the roles selection menu.",
     )
-    async def _roles_toggle(
+    async def roles_toggle(
         self,
         interaction: discord.Interaction,
-        channel: discord.TextChannel = None,
+        channel: discord.TextChannel | None = None,
         content: str = "Select one of the following roles:",
-    ):
+    ) -> None:
         """Create a role selection menu, to select *one* role from the list."""
 
         await self.roles_creation_callback(interaction, channel, content, toggle=True)
@@ -211,49 +196,97 @@ class Roles(commands.Cog):
     @app_commands.describe(
         message="Link or ID of the message to add roles to. Must be the bot's!"
     )
-    async def _roles_add(
+    async def roles_add(
         self,
         interaction: discord.Interaction,
         message: app_commands.Transform[discord.Message, BotMessageTransformer],
-    ):
+    ) -> None:
         """Add a role to the selection menu."""
 
-        roles = await self.roles_creation_selection(interaction)
+        assert interaction.guild is not None
+        view_model = await self._get_view_from_message(message)
+        current_selection_roles = [
+            interaction.guild.get_role(role.role_id) for role in view_model.roles
+        ]
+        current_selection_roles = [r for r in current_selection_roles if r is not None]
 
-        execute = self.roles_add_remove("save")
-        embed = await execute(message, roles)
+        added_roles = await self.roles_creation_selection(
+            interaction, ignored_roles=current_selection_roles
+        )
+        view_model.roles.extend([models.Role(role_id=r.id) for r in added_roles])
+        await self._save_view(view_model)
+
+        # update view model with added roles
+        view_model = await self._get_view_from_message(message)
+
+        await message.edit(view=await self.build_view(view_model))
+
+        roles_str = ", ".join(role.mention for role in added_roles)
+        embed = discord.Embed(
+            color=discord.Color.green(),
+            title="Successfully edited selection.",
+            description=(
+                f"Role(s) {roles_str} added to the " f"[message]({message.jump_url})."
+            ),
+        )
 
         await interaction.followup.send(embed=embed, ephemeral=True)
 
     @roles.command(name="remove")
     @app_commands.describe(
-        message="Link or ID of the message to add roles to. Must be the bot's!"
+        message="Link or ID of the message to remove roles from. Must be the bot's!"
     )
-    async def _roles_remove(
+    async def roles_remove(
         self,
         interaction: discord.Interaction,
         message: app_commands.Transform[discord.Message, BotMessageTransformer],
-    ):
-        """Remove a role to the selection menu."""
+    ) -> None:
+        """Remove roles from the selection menu."""
 
-        roles = await self.roles_creation_selection(interaction)
+        assert interaction.guild is not None
+        view_model = await self._get_view_from_message(message)
+        current_selection_roles = [
+            interaction.guild.get_role(role.role_id) for role in view_model.roles
+        ]
+        current_selection_roles = [r for r in current_selection_roles if r is not None]
 
-        execute = self.roles_add_remove("delete")
-        embed = await execute(message, roles)
+        removed_roles = await self.roles_creation_selection(
+            interaction, available_roles=current_selection_roles
+        )
+
+        removed_role_models = [
+            r for r in view_model.roles if r.role_id in [rr.id for rr in removed_roles]
+        ]
+        await self._delete_roles(removed_role_models)
+
+        # update view model without removed roles
+        view_model = await self._get_view_from_message(message)
+
+        await message.edit(view=await self.build_view(view_model))
+
+        roles_str = ", ".join(role.mention for role in removed_roles)
+        embed = discord.Embed(
+            color=discord.Color.green(),
+            title="Successfully edited selection.",
+            description=(
+                f"Role(s) {roles_str} removed from the "
+                f"[message]({message.jump_url})."
+            ),
+        )
 
         await interaction.followup.send(embed=embed, ephemeral=True)
 
     @roles.command(name="edit")
     @app_commands.describe(
-        message="Link or ID of the message to add roles to. Must be the bot's!",
+        message="Link or ID of the message to edit the content. Must be the bot's!",
         content="New content to edit in the message.",
     )
-    async def _roles_edit(
+    async def roles_edit(
         self,
         interaction: discord.Interaction,
         message: app_commands.Transform[discord.Message, BotMessageTransformer],
         content: str,
-    ):
+    ) -> None:
         """Edit the content of a role selection menu message."""
 
         await message.edit(content=content)
@@ -271,15 +304,16 @@ class Roles(commands.Cog):
 
     @roles.command(name="delete")
     @app_commands.describe(
-        message="Link or ID of the message to add roles to. Must be the bot's!"
+        message="Link or ID of the message to remove. Must be the bot's!"
     )
-    async def _roles_delete(
+    async def roles_delete(
         self,
         interaction: discord.Interaction,
         message: app_commands.Transform[discord.Message, BotMessageTransformer],
-    ):
+    ) -> None:
         """Delete a role selection menu message."""
 
+        assert isinstance(message.channel, discord.abc.GuildChannel)
         await self._delete_view_from_message(message)
         await message.delete()
 
@@ -294,11 +328,13 @@ class Roles(commands.Cog):
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @_roles_add.error
-    @_roles_remove.error
-    @_roles_edit.error
-    @_roles_delete.error
-    async def _roles_error(self, interaction: discord.Interaction, error: Exception):
+    @roles_add.error
+    @roles_remove.error
+    @roles_edit.error
+    @roles_delete.error
+    async def roles_error(
+        self, interaction: discord.Interaction, error: Exception
+    ) -> None:
         """Error handler for the roles subcommands."""
 
         if isinstance(error, TransformerMessageNotFound):
@@ -317,148 +353,58 @@ class Roles(commands.Cog):
         else:
             interaction.extras["error_handled"] = False
 
-    async def _create_tables(self):
-        await self.bot.db.execute(
-            """
-            CREATE TABLE IF NOT EXISTS roles_view(
-                guild_id   INTEGER NOT NULL,
-                message_id INTEGER NOT NULL UNIQUE,
-                toggle     BOOLEAN NOT NULL,
-                view_id    INTEGER NOT NULL PRIMARY KEY
+    async def _get_all_views(self) -> list[models.View]:
+        """Select all registered Views from the database."""
+
+        async with self.bot.db.session() as session:
+            roles_view_models = await session.scalars(
+                select(models.View).options(
+                    joinedload(models.View.components),
+                    joinedload(models.View.roles),
+                )
             )
-            """
-        )
 
-        await self.bot.db.execute(
-            """
-            CREATE TABLE IF NOT EXISTS roles_component(
-                component_id TEXT NOT NULL,
-                name         TEXT NOT NULL,
-                view_id      INTEGER NOT NULL,
-                FOREIGN KEY (view_id)
-                    REFERENCES roles_view (view_id)
-                    ON DELETE  CASCADE
+        return list(roles_view_models.unique())
+
+    async def _get_view_from_message(self, message: discord.Message) -> models.View:
+        """Get the View data associated with a Message."""
+
+        async with self.bot.db.session() as session:
+            view_model = await session.scalar(
+                select(models.View)
+                .where(models.View.message_id == message.id)
+                .options(
+                    joinedload(models.View.components),
+                    joinedload(models.View.roles),
+                )
             )
-            """
-        )
 
-        await self.bot.db.execute(
-            """
-            CREATE TABLE IF NOT EXISTS roles_role(
-                role_id INTEGER NOT NULL,
-                view_id INTEGER NOT NULL,
-                FOREIGN KEY (view_id)
-                    REFERENCES roles_view (view_id)
-                    ON DELETE  CASCADE
-            )
-            """
-        )
+        assert view_model is not None
+        return view_model
 
-    async def _get_all_views(self):
-        return await self.bot.db.execute_fetchall(
-            """
-            SELECT *
-              FROM roles_view
-            """
-        )
+    async def _save_view(self, role_view: models.View) -> None:
+        """Save the View information."""
 
-    async def _get_view_from_message(self, message):
-        async with self.bot.db.execute(
-            """
-            SELECT *
-              FROM roles_view
-             WHERE message_id=:message_id
-            """,
-            dict(message_id=message.id),
-        ) as c:
-            row = await c.fetchone()
+        async with self.bot.db.session() as session:
+            async with session.begin():
+                session.add(role_view)
 
-        return row
+    async def _delete_roles(self, role_models: list[models.Role]) -> None:
+        """Delete roles information from the Database."""
 
-    async def _get_roles(self, view_id):
-        return await self.bot.db.execute_fetchall(
-            """
-            SELECT *
-              FROM roles_role
-             WHERE view_id=:view_id
-            """,
-            dict(view_id=view_id),
-        )
+        async with self.bot.db.session() as session:
+            async with session.begin():
+                for role in role_models:
+                    await session.delete(role)
 
-    async def _get_components(self, view_id):
-        return await self.bot.db.execute_fetchall(
-            """
-            SELECT *
-              FROM roles_component
-             WHERE view_id=:view_id
-            """,
-            dict(view_id=view_id),
-        )
-
-    async def _save_view(self, payload):
-        row = await self.bot.db.execute_insert(
-            """
-            INSERT INTO roles_view(guild_id,
-                                   message_id,
-                                   toggle)
-            VALUES (:guild_id,
-                    :message_id,
-                    :toggle)
-            """,
-            payload,
-        )
-
-        await self.bot.db.commit()
-
-        view_id = row[0]
-        return view_id
-
-    async def _save_components(self, payload):
-        await self.bot.db.executemany(
-            """
-            INSERT INTO roles_component
-            VALUES (:component_id,
-                    :name,
-                    :view_id)
-            """,
-            payload,
-        )
-
-        await self.bot.db.commit()
-
-    async def _save_roles(self, payload):
-        await self.bot.db.executemany(
-            """
-            INSERT INTO roles_role
-            VALUES (:role_id,
-                    :view_id)
-            """,
-            payload,
-        )
-
-        await self.bot.db.commit()
-
-    async def _delete_roles(self, payload):
-        await self.bot.db.executemany(
-            """
-            DELETE FROM roles_role
-             WHERE role_id=:role_id
-            """,
-            payload,
-        )
-
-        await self.bot.db.commit()
-
-    async def _delete_view_from_message(self, message):
+    async def _delete_view_from_message(self, message: discord.Message) -> None:
         """Delete the view and all the referencing rows in the other tables."""
 
         # delete should cascade
-        await self.bot.db.execute(
-            """
-            DELETE FROM roles_view
-             WHERE message_id=:message_id
-            """,
-            dict(message_id=message.id),
-        )
+        async with self.bot.db.session() as session:
+            async with session.begin():
+                view_model = await session.scalar(
+                    select(models.View).where(models.View.message_id == message.id)
+                )
 
-        await self.bot.db.commit()
+                await session.delete(view_model)

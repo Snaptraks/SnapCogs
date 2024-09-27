@@ -2,15 +2,14 @@ import re
 import unicodedata
 
 import discord
+import pint
 from discord import app_commands
 from discord.ext import commands
-import pint
 
 from ..bot import Bot
 
-
 UREG = pint.UnitRegistry()
-UREG.default_system = None
+UREG.default_system = None  # type: ignore
 
 
 def _extract_units():

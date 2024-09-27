@@ -14,7 +14,7 @@ class MessageTransformer(app_commands.Transformer):
         try:
             msg = await commands.MessageConverter().convert(ctx, value)
         except commands.BadArgument as e:
-            raise TransformerMessageNotFound(value, cls.type(), cls, e)
+            raise TransformerMessageNotFound(value, cls.type, cls, e)
         return msg
 
 
@@ -24,6 +24,7 @@ class BotMessageTransformer(MessageTransformer):
     @classmethod
     async def transform(cls, interaction: discord.Interaction, value: str):
         msg = await super().transform(interaction, value)
+        assert interaction.guild is not None
 
         if msg.author != interaction.guild.me:
             raise TransformerNotBotMessage()

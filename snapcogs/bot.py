@@ -1,27 +1,18 @@
-from datetime import datetime, date
 import logging
 
-import aiosqlite
 import aiohttp
 import discord
 from discord.ext import commands
 
+from .database import Database
 from .tree import CommandTree
 
 LOGGER = logging.getLogger(__name__)
 
 
-def _decode_datetime(s):
-    return datetime.fromisoformat(s.decode())
-
-
-def _decode_date(s):
-    return date.fromisoformat(s.decode())
-
-
 class Bot(commands.Bot):
     def __init__(self, *args, **kwargs):
-        self.db_name = kwargs.get("db_name", ":memory:")
+        self.db_name = kwargs.get("db_name", None)
         self.permissions = kwargs.get("permissions", discord.Permissions.text())
         self.startup_extensions = kwargs.get("startup_extensions", [])
         kwargs["tree_cls"] = kwargs.get("tree_cls", CommandTree)
@@ -32,21 +23,7 @@ class Bot(commands.Bot):
         self.http_session = aiohttp.ClientSession()
 
         # Make DB connection
-        self.db = await aiosqlite.connect(self.db_name, detect_types=1)
-        # allow for name-based access of data columns
-        self.db.row_factory = aiosqlite.Row
-        # register boolean type for database
-        aiosqlite.register_adapter(bool, int)
-        aiosqlite.register_converter("BOOLEAN", lambda v: bool(int(v)))
-        # register aware datetime type for database
-        aiosqlite.register_adapter("DATETIME", lambda dt: dt.isoformat)
-        aiosqlite.register_converter("DATETIME", _decode_datetime)
-        aiosqlite.register_converter("TIMESTAMP", _decode_datetime)
-        # register date format
-        aiosqlite.register_adapter("DATE", lambda date: date.isoformat)
-        aiosqlite.register_converter("DATE", _decode_date)
-        # allow for cascade deletion
-        await self.db.execute("PRAGMA foreign_keys = ON")
+        self.db = Database(self.db_name)
 
         for extension in self.startup_extensions:
             try:
@@ -57,13 +34,15 @@ class Bot(commands.Bot):
             else:
                 LOGGER.debug(f"{extension} loaded successfully.")
 
+        await self.db.initialise_database()
+
         self.boot_time = discord.utils.utcnow()
 
     async def close(self):
         """Subclass the close() method to close the HTTP Session."""
 
         await self.http_session.close()
-        await self.db.close()
+        await self.db.engine.dispose()
         await super().close()
 
     async def on_ready(self):
@@ -124,3 +103,19 @@ class Bot(commands.Bot):
             )
         else:
             LOGGER.debug(f"Exception in command {command} was already handled")
+
+    async def get_or_fetch_member(
+        self, guild: discord.Guild, member_id: int
+    ) -> discord.Member | None:
+        """Look up a member in cache, or fetches if not found."""
+
+        member = guild.get_member(member_id)
+        if member is not None:
+            return member
+
+        members = await guild.query_members(limit=1, user_ids=[member_id])
+
+        if len(members) == 0:
+            return None
+
+        return members[0]

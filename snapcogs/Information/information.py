@@ -51,17 +51,24 @@ class Information(commands.Cog):
     async def about(self, interaction: discord.Interaction):
         """View information about the bot itself."""
 
+        assert self.bot.user is not None
+        assert interaction.guild is not None
         app_info = await self.bot.application_info()
 
         # host should have git installed if they installed this package
         git_link, _ = await run_process("git config --get remote.origin.url")
+
+        if self.bot.user.avatar:
+            thumbnail_url = self.bot.user.avatar.url
+        else:
+            thumbnail_url = ""
 
         embed = discord.Embed(
             title=f"Information about {self.bot.user}.",
             description=app_info.description,
             url=git_link,
             color=discord.Color.blurple(),
-        ).set_thumbnail(url=self.bot.user.avatar.url)
+        ).set_thumbnail(url=thumbnail_url)
 
         # some statistics
         total_members = 0
@@ -109,7 +116,7 @@ class Information(commands.Cog):
             name="Timeline",
             value=(
                 f"Created: {relative_dt(self.bot.user.created_at)}\n"
-                f"Joined server: {relative_dt(interaction.guild.me.joined_at)}\n"
+                f"Joined server: {relative_dt(interaction.guild.me.joined_at or discord.utils.utcnow())}\n"
                 f"Boot time: {relative_dt(self.bot.boot_time)}"
             ),
         )
@@ -205,7 +212,7 @@ class Information(commands.Cog):
                 ),
                 inline=False,
             )
-            .set_thumbnail(url=user.avatar.url)
+            .set_thumbnail(url=user.avatar.url if user.avatar else "")
         )
 
         if isinstance(user, discord.Member):
@@ -214,7 +221,7 @@ class Information(commands.Cog):
             embed.add_field(
                 name="Member information",
                 value=(
-                    f"Joined: {relative_dt(user.joined_at)}\n"
+                    f"Joined: {relative_dt(user.joined_at) if user.joined_at else 'Unknown'}\n"
                     f"Roles: {', '.join(r.mention for r in reversed(user.roles[1:]))}"
                 ),
                 inline=False,

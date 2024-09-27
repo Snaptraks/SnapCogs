@@ -190,26 +190,6 @@ Required arguments in commands are marked with angle brackets ``<>``, and option
 >
 > Convert a value from one unit to another. The `from` and `to` parameters have autocomplete enabled, suggesting different units as you are typing, according to dimentionality (either the units are of length, mass, time, etc.).
 
-### Link
-
-This cog allows you to "link" channels from different servers together.
-Messages sent inone channel will be transfered via webhook to the other channels in its group.
-By default, members need the `Manage Messages` permission to be able to use the commands.
-
-> **\>** ``/link create [code]``
->
-> Get the linking code for this channel or link to a group.
->
-> This marks the channel as ready for pairing. Simply use the command with the code in another channel to create a channel group where messages sent in one will be propagated to the other channels.
-
-> **\>** ``/link remove``
->
-> Remove the link between this channel and the others from the group.
-
-> **\>** ``/link check``
->
-> Check the links between this channel and the others from the group.
-
 ### Roles
 
 > **\>** ``/roles select [channel] [content]``
