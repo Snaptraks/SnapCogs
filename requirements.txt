@@ -4,4 +4,4 @@ discord.py>=2.4
 Pillow==10.4.0
 pint>=0.19
 pytz
-SQLAlchemy==2.0.35
+SQLAlchemy[asyncio]==2.0.35
