@@ -1,8 +1,8 @@
 import discord
 from discord.app_commands import (
-    NoPrivateMessage,
-    MissingPermissions,
     BotMissingPermissions,
+    MissingPermissions,
+    NoPrivateMessage,
     check,
 )
 
@@ -23,6 +23,7 @@ def has_guild_permissions(**perms: bool):
     def predicate(interaction: discord.Interaction) -> bool:
         if not interaction.guild:
             raise NoPrivateMessage
+        assert isinstance(interaction.user, discord.Member)
 
         permissions = interaction.user.guild_permissions
         missing = [

@@ -203,7 +203,7 @@ class Fun(commands.Cog):
         template = Image.open(COG_PATH / "self_bonk.png")
 
         avatar_left = avatar.resize((250, 250))
-        avatar_right = avatar_left.transpose(Image.FLIP_LEFT_RIGHT)
+        avatar_right = avatar_left.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
 
         template.paste(avatar_left, (175, -20), mask=avatar_left)
         template.paste(avatar_right, (1028, 16), mask=avatar_right)

@@ -1,16 +1,16 @@
-from collections import defaultdict
-from datetime import datetime
 import itertools
 import typing
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+from collections import defaultdict
+from datetime import datetime
 
-from dateutil.parser import parse, ParserError
 import discord
+from dateutil.parser import ParserError, parse
 from discord import app_commands
 from discord.ext import commands
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from .timezones import abbrevs_pytz
 from ..bot import Bot
+from .timezones import abbrevs_pytz
 
 TZ_DATA = abbrevs_pytz()
 
@@ -106,7 +106,7 @@ class Timestamps(commands.Cog):
         for s in _STYLES.keys():
             if style is not None and style.value != s:
                 continue
-            formatted_dt = discord.utils.format_dt(dt, style=s)
+            formatted_dt = discord.utils.format_dt(dt, style=s)  # type: ignore
             embed.add_field(name=formatted_dt, value=f"`{formatted_dt}`")
 
         return embed
@@ -143,7 +143,7 @@ class Timestamps(commands.Cog):
     ) -> None:
         """Create timestamps of the given time to send to get rich formatting."""
 
-        dt_tz = dt.replace(tzinfo=tz)
+        dt_tz = dt.replace(tzinfo=tz)  # type: ignore
 
         embed = self._make_timestamps_embed(dt_tz, style=style)
         await interaction.response.send_message(embed=embed)
