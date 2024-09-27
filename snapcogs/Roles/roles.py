@@ -27,13 +27,16 @@ class Roles(commands.Cog):
         self.persistent_views_loaded = False
 
     @commands.Cog.listener()
-    async def on_ready(self):
+    async def on_ready(self) -> None:
+        """Load the persistent Views once, when the guild data is loaded in the bot."""
+
         if not self.persistent_views_loaded:
-            await asyncio.sleep(2)
             await self.load_persistent_views()  # needs guild data, so we load this here
             self.persistent_views_loaded = True
 
     async def load_persistent_views(self) -> None:
+        """Load all persistent Views."""
+
         for view_model in await self._get_all_views():
             view = await self.build_view(view_model)
             if view is not None:
@@ -45,6 +48,8 @@ class Roles(commands.Cog):
     async def save_persistent_view(
         self, view: views.RolesView, message: discord.Message
     ) -> None:
+        """Save a persistent View to the database."""
+
         assert message.guild is not None
 
         roles_view_model = models.View(
@@ -70,7 +75,9 @@ class Roles(commands.Cog):
 
         await self._save_view(roles_view_model)
 
-    async def build_view(self, view_model: models.View):
+    async def build_view(self, view_model: models.View) -> views.RolesView | None:
+        """Build a Discord View from database information."""
+
         guild = self.bot.get_guild(view_model.guild_id)
 
         if guild is None:
@@ -136,7 +143,7 @@ class Roles(commands.Cog):
         content: str,
         *,
         toggle: bool,
-    ):
+    ) -> None:
         """Generic callback to create a roles selection menu."""
 
         if channel is None:
@@ -156,14 +163,14 @@ class Roles(commands.Cog):
             "Channel to send the roles selection menu to. "
             "Defaults to current channel."
         ),
-        content="Text to send with the roles selection menu",
+        content="Text in the message to send with the roles selection menu.",
     )
     async def roles_select(
         self,
         interaction: discord.Interaction,
         channel: discord.TextChannel | None = None,
         content: str = "Select from the following roles:",
-    ):
+    ) -> None:
         """Create a role selection menu, to select many roles from the list."""
 
         await self.roles_creation_callback(interaction, channel, content, toggle=False)
@@ -174,14 +181,14 @@ class Roles(commands.Cog):
             "Channel to send the roles selection menu to. "
             "Defaults to current channel."
         ),
-        content="Text to send with the roles selection menu",
+        content="Text in the message to send with the roles selection menu.",
     )
     async def roles_toggle(
         self,
         interaction: discord.Interaction,
         channel: discord.TextChannel | None = None,
         content: str = "Select one of the following roles:",
-    ):
+    ) -> None:
         """Create a role selection menu, to select *one* role from the list."""
 
         await self.roles_creation_callback(interaction, channel, content, toggle=True)
@@ -194,7 +201,7 @@ class Roles(commands.Cog):
         self,
         interaction: discord.Interaction,
         message: app_commands.Transform[discord.Message, BotMessageTransformer],
-    ):
+    ) -> None:
         """Add a role to the selection menu."""
 
         assert interaction.guild is not None
@@ -234,7 +241,7 @@ class Roles(commands.Cog):
         self,
         interaction: discord.Interaction,
         message: app_commands.Transform[discord.Message, BotMessageTransformer],
-    ):
+    ) -> None:
         """Remove roles from the selection menu."""
 
         assert interaction.guild is not None
@@ -280,7 +287,7 @@ class Roles(commands.Cog):
         interaction: discord.Interaction,
         message: app_commands.Transform[discord.Message, BotMessageTransformer],
         content: str,
-    ):
+    ) -> None:
         """Edit the content of a role selection menu message."""
 
         await message.edit(content=content)
@@ -298,13 +305,13 @@ class Roles(commands.Cog):
 
     @roles.command(name="delete")
     @app_commands.describe(
-        message="Link or ID of the message with roles to remove. Must be the bot's!"
+        message="Link or ID of the message to remove. Must be the bot's!"
     )
     async def roles_delete(
         self,
         interaction: discord.Interaction,
         message: app_commands.Transform[discord.Message, BotMessageTransformer],
-    ):
+    ) -> None:
         """Delete a role selection menu message."""
 
         assert isinstance(message.channel, discord.abc.GuildChannel)
@@ -326,7 +333,9 @@ class Roles(commands.Cog):
     @roles_remove.error
     @roles_edit.error
     @roles_delete.error
-    async def roles_error(self, interaction: discord.Interaction, error: Exception):
+    async def roles_error(
+        self, interaction: discord.Interaction, error: Exception
+    ) -> None:
         """Error handler for the roles subcommands."""
 
         if isinstance(error, TransformerMessageNotFound):
@@ -381,11 +390,12 @@ class Roles(commands.Cog):
             async with session.begin():
                 session.add(role_view)
 
-    async def _delete_roles(self, role_models: list[models.Role]):
+    async def _delete_roles(self, role_models: list[models.Role]) -> None:
+        """Delete roles information from the Database."""
+
         async with self.bot.db.session() as session:
             async with session.begin():
                 for role in role_models:
-                    print(f"{role.id=}")
                     await session.delete(role)
 
     async def _delete_view_from_message(self, message: discord.Message) -> None:
