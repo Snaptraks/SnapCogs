@@ -12,23 +12,24 @@ def int_fmt(number, digits=3):
     return f"`{number:>{digits}d}`"
 
 
-class Badge:
-    active_developer = "<:active_developer:1266092694506311843>"
-    bug_hunter = "<:bug_hunter:1266092708460499044>"
-    bug_hunter_level_2 = "<:bug_hunter_level_2:1266092721475686432>"
-    discord_verified_moderator = "<:discord_certified_moderator:1266092743122354276>"
-    early_supporter = "<:early_supporter:1266092753692000448>"
-    hypesquad = "<:hypesquad:1266092765566210171>"
-    hypesquad_balance = "<:hypesquad_balance:1266092776827654286>"
-    hypesquad_bravery = "<:hypesquad_bravery:1266092787267272784>"
-    hypesquad_brilliance = "<:hypesquad_brilliance:1266092800173150209>"
-    moderator = "<:moderator:1266092811208364175>"
-    partner = "<:partner:1266092818628214906>"
-    partner_server_owner = "<:partner_server_owner:1266092826249396396>"
-    staff = "<:staff:1266092833744490526>"
-    subscriber_nitro = "<:subscriber_nitro:1266092840895647855>"
-    verified = "<:verified:1266092849573920779>"
-    verified_bot_developer = "<:verified_bot_developer:1266092858813714442>"
+BADGES = dict(
+    active_developer="<:active_developer:1266092694506311843>",
+    bug_hunter="<:bug_hunter:1266092708460499044>",
+    bug_hunter_level_2="<:bug_hunter_level_2:1266092721475686432>",
+    discord_verified_moderator="<:discord_certified_moderator:1266092743122354276>",
+    early_supporter="<:early_supporter:1266092753692000448>",
+    hypesquad="<:hypesquad:1266092765566210171>",
+    hypesquad_balance="<:hypesquad_balance:1266092776827654286>",
+    hypesquad_bravery="<:hypesquad_bravery:1266092787267272784>",
+    hypesquad_brilliance="<:hypesquad_brilliance:1266092800173150209>",
+    moderator="<:moderator:1266092811208364175>",
+    partner="<:partner:1266092818628214906>",
+    partner_server_owner="<:partner_server_owner:1266092826249396396>",
+    staff="<:staff:1266092833744490526>",
+    subscriber_nitro="<:subscriber_nitro:1266092840895647855>",
+    verified="<:verified:1266092849573920779>",
+    verified_bot_developer="<:verified_bot_developer:1266092858813714442>",
+)
 
 
 class Information(commands.Cog):
@@ -196,7 +197,7 @@ class Information(commands.Cog):
 
         badges = []
         for badge, is_set in user.public_flags:
-            if is_set and (emoji := getattr(Badge, badge, None)):
+            if is_set and (emoji := BADGES.get(badge, None)):
                 badges.append(emoji)
 
         embed = (
