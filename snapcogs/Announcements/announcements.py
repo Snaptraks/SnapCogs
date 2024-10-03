@@ -12,10 +12,9 @@ from discord.ext import commands, tasks
 from discord.utils import format_dt
 from sqlalchemy import delete, select
 
-from snapcogs import Bot
-from snapcogs.utils import relative_dt
-from snapcogs.utils.views import confirm_prompt
-
+from ..bot import Bot
+from ..utils import relative_dt
+from ..utils.views import confirm_prompt
 from .models import Birthday
 
 LOGGER = logging.getLogger(__name__)

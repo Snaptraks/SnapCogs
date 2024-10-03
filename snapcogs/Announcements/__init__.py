@@ -1,4 +1,4 @@
-from snapcogs import Bot
+from ..bot import Bot
 from .announcements import Announcements
 
 
