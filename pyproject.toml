@@ -1,5 +1,48 @@
 [build-system]
-# These are the assumed default build requirements from pip:
-# https://pip.pypa.io/en/stable/reference/pip/#pep-517-and-518-support
-requires = ["setuptools>=43.0.0", "wheel"]
-build-backend = "setuptools.build_meta"
+    # These are the assumed default build requirements from pip:
+    # https://pip.pypa.io/en/stable/reference/pip/#pep-517-and-518-support
+    build-backend = "setuptools.build_meta"
+    requires      = [ "setuptools>=43.0.0", "wheel" ]
+
+[project]
+    authors = [ { name = "Snaptraks" } ]
+    classifiers = [
+
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
+        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Topic :: Communications :: Chat",
+        "Topic :: Internet",
+        "Topic :: Utilities",
+    ]
+    description = "A collection of Cogs for discord.py bots."
+    dynamic = [ "dependencies" ]
+    license = { file = "LICENSE.txt" }
+    name = "snapcogs"
+    readme = { file = "README.md", content-type = "text/markdown" }
+    requires-python = ">=3.10"
+    version = "24.10.1"
+
+[project.urls]
+    "Bug Reports" = "https://github.com/Snaptraks/SnapCogs/issues"
+    Documentation = "https://github.com/Snaptraks/SnapCogs/blob/master/README.md"
+
+[project.optional-dependencies]
+    all = [ "snapcogs[development,timestamps]" ]
+    development = [ "pint>=0.19" ]
+    timestamps = [
+        "python-dateutil>=2.0",
+        "pytz",
+    ]
+[tool.setuptools]
+    include-package-data = true
+
+[tool.setuptools.dynamic]
+    dependencies = { file = "requirements.txt" }
+
+[tool.ruff]
+    line-length = 88
