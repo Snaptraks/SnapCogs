@@ -22,6 +22,17 @@ To install the modules, you can install them directly from the repository's mast
 pip install -U "git+https://github.com/Snaptraks/SnapCogs@master"
 ```
 
+To install with optional dependencies, use:
+
+```
+pip install -U "snapcogs[deps-here] @ git+https://github.com/Snaptraks/SnapCogs@master"
+```
+
+where ``deps-here`` is a comma seperated list of the following:
+- ``development``
+- ``horoscope``
+- ``timestamps``
+
 Then load the extensions in your bot's code **inside the ``setup_hook`` method**:
 
 ```py
@@ -179,6 +190,12 @@ Fortune-telling or advice seeking. Ask the Magic 8 Ball a yes-or-no question, an
 ### ``/bonk <member> [text=None]``
 
 Bonk a member, and add a message! This command creates an image with the member's profile picture and the bonk meme.
+
+## Horoscope
+
+### ``/horoscope <zodiac_sign>``
+
+Get today's horoscope for the given Zodiac sign. Information is taken from [horoscope.com][horoscope].
 
 ## Information
 
@@ -349,6 +366,7 @@ Exception raised by `BotMessageTransformer` when the provided message was not se
 The SnapCogs logo was created using the [Unicorn icon created by rddrt - Flaticons][unicorn] and the [Development icons created by Smashicons - Flaticon][cog]
 
 [dpy]: https://github.com/Rapptz/discord.py
+[horoscope]: https://www.horoscope.com/us/index.aspx
 [timestamp]: https://discordpy.readthedocs.io/en/latest/api.html?highlight=format_dt#discord.utils.format_dt
 [hatbot]: https://github.com/Snaptraks/HatBot
 [zenyatta]: https://github.com/Snaptraks/Zenyatta

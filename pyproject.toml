@@ -7,7 +7,6 @@
 [project]
     authors = [ { name = "Snaptraks" } ]
     classifiers = [
-
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
         "Programming Language :: Python :: 3 :: Only",
@@ -32,8 +31,9 @@
     Documentation = "https://github.com/Snaptraks/SnapCogs/blob/master/README.md"
 
 [project.optional-dependencies]
-    all = [ "snapcogs[development,timestamps]" ]
+    all = [ "snapcogs[development,horoscope,timestamps]" ]
     development = [ "pint>=0.19" ]
+    horoscope = [ "beautifulsoup4>=4.9.3" ]
     timestamps = [
         "python-dateutil>=2.0",
         "pytz",
