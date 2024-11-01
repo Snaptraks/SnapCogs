@@ -1,4 +1,4 @@
 aiosqlite==0.20.0
 discord.py>=2.4
-Pillow==11.0.0
-SQLAlchemy[asyncio]==2.0.36
+Pillow>=10.0
+SQLAlchemy[asyncio]>=2.0
