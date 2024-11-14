@@ -67,8 +67,7 @@ class Announcements(commands.Cog):
     async def cog_unload(self):
         self.birthday_announcement.cancel()
 
-    # @tasks.loop(time=datetime.time(hour=12, tzinfo=datetime.UTC))
-    @tasks.loop(count=1)
+    @tasks.loop(time=datetime.time(hour=12, tzinfo=datetime.UTC))
     async def birthday_announcement(self):
         """Accounce the birthday of a member.
         Birthdays need to be registered by the member beforehand
