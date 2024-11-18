@@ -6,6 +6,13 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 class Base(DeclarativeBase):
     id: Mapped[int] = mapped_column(primary_key=True)
 
+    def __repr__(self) -> str:
+        keys = ", ".join(
+            f"{column.key}={getattr(self, column.key)}"
+            for column in self.__table__.columns
+        )
+        return f"{self.__class__.__name__}({keys})"
+
 
 class Database:
     def __init__(self, database_name: str | None = None) -> None:
