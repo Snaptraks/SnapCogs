@@ -11,6 +11,7 @@ from discord import app_commands
 from discord.ext import commands, tasks
 from discord.utils import format_dt
 from sqlalchemy import delete, select
+from sqlalchemy.exc import IntegrityError
 
 from ..bot import Bot
 from ..utils import relative_dt
@@ -178,6 +179,12 @@ class Announcements(commands.Cog):
             LOGGER.debug(f"{day} is not in {month}")
             await interaction.response.send_message(
                 f"Day {day} is out of range for month {month}",
+                ephemeral=True,
+            )
+
+        elif isinstance(error, IntegrityError):
+            await interaction.response.send_message(
+                "Your birthday was already registered, thanks!",
                 ephemeral=True,
             )
 
