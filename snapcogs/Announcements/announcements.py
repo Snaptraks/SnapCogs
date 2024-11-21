@@ -75,7 +75,7 @@ class Announcements(commands.Cog):
         with the `/birthday register` command.
         """
         birthdays = await self._get_today_birthdays()
-        LOGGER.debug(f"Found {len(birthdays)} birthdays for today")
+        LOGGER.info(f"Found {len(birthdays)} birthdays for today")
 
         for bday in birthdays:
             guild = await self.bot.fetch_guild(bday.guild_id)
@@ -83,8 +83,11 @@ class Announcements(commands.Cog):
                 # Bot left the guild maybe?
                 continue
             try:
-                member = await guild.fetch_member(bday.user_id)
-                guild.get_member
+                member = await self.bot.get_or_fetch_member(guild, bday.user_id)
+                if member is None:
+                    # skip if we can't find the member
+                    LOGGER.debug(f"Can't fing member {bday.user_id}")
+                    continue
                 # if we bring back the Birthday role,
                 # this needs to be called as a task
                 asyncio.create_task(self.birthday_task(member))
