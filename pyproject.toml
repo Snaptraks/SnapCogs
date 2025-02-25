@@ -18,8 +18,13 @@
         "Topic :: Internet",
         "Topic :: Utilities",
     ]
+    dependencies = [
+        "aiosqlite==0.21",
+        "discord-py>=2.4",
+        "pillow>=10.0",
+        "sqlalchemy[asyncio]>=2.0",
+]
     description = "A collection of Cogs for discord.py bots."
-    dynamic = [ "dependencies" ]
     license = { file = "LICENSE.txt" }
     name = "snapcogs"
     readme = { file = "README.md", content-type = "text/markdown" }
@@ -40,9 +45,6 @@
     ]
 [tool.setuptools]
     include-package-data = true
-
-[tool.setuptools.dynamic]
-    dependencies = { file = "requirements.txt" }
 
 [tool.ruff]
     line-length = 88
