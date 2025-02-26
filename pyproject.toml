@@ -23,7 +23,7 @@
         "aiosqlite==0.21",
         "discord-py>=2.5",
         "pillow>=10.0",
-        "sqlalchemy[asyncio]>=2.0",
+        "sqlalchemy[asyncio]>=2.0,<3",
 ]
     description = "A collection of Cogs for discord.py bots."
     license = { file = "LICENSE.txt" }
