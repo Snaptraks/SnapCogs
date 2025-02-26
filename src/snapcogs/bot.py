@@ -1,4 +1,5 @@
 import logging
+import sys
 
 import aiohttp
 import discord
@@ -51,17 +52,22 @@ class Bot(commands.Bot):
             # early if it is
             return
         oauth_url = discord.utils.oauth_url(self.user.id, permissions=self.permissions)
+        py_version = sys.version_info
         LOGGER.info(
-            f"Logged in as {self.user.name} | discord.py version {discord.__version__}"
-        )
-        print(
-            f"Logged in as {self.user.name} (ID:{self.user.id})\n"
-            "--------\n"
-            f"Current discord.py version: {discord.__version__}\n"
-            "--------\n"
-            f"Use this link to invite {self.user.name}:\n"
-            f"{oauth_url}\n"
-            "--------"
+            "\n".join(
+                [
+                    "Login Info",
+                    f"Logged in as {self.user.name} (ID:{self.user.id})",
+                    "--------",
+                    "Versions:",
+                    f"\tPython: {py_version.major}.{py_version.minor}.{py_version.micro}",
+                    f"\tdiscord.py: {discord.__version__}",
+                    "--------",
+                    f"Use this link to invite {self.user.name}:",
+                    f"{oauth_url}",
+                    "--------",
+                ]
+            )
         )
 
     async def on_command_error(
