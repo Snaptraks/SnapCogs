@@ -1,3 +1,4 @@
+import logging
 from typing import Union
 
 import discord
@@ -7,34 +8,14 @@ from discord.ext import commands
 from ..bot import Bot
 from ..utils import relative_dt, run_process
 
+LOGGER = logging.getLogger(__name__)
+
 
 def int_fmt(number, digits=3):
     return f"`{number:>{digits}d}`"
 
 
-BADGES = dict(
-    active_developer="<:active_developer:1266092694506311843>",
-    bug_hunter="<:bug_hunter:1266092708460499044>",
-    bug_hunter_level_2="<:bug_hunter_level_2:1266092721475686432>",
-    discord_verified_moderator="<:discord_certified_moderator:1266092743122354276>",
-    early_supporter="<:early_supporter:1266092753692000448>",
-    hypesquad="<:hypesquad:1266092765566210171>",
-    hypesquad_balance="<:hypesquad_balance:1266092776827654286>",
-    hypesquad_bravery="<:hypesquad_bravery:1266092787267272784>",
-    hypesquad_brilliance="<:hypesquad_brilliance:1266092800173150209>",
-    moderator="<:moderator:1266092811208364175>",
-    partner="<:partner:1266092818628214906>",
-    partner_server_owner="<:partner_server_owner:1266092826249396396>",
-    staff="<:staff:1266092833744490526>",
-    subscriber_nitro="<:subscriber_nitro:1266092840895647855>",
-    verified="<:verified:1266092849573920779>",
-    verified_bot_developer="<:verified_bot_developer:1266092858813714442>",
-)
-
-
 class Information(commands.Cog):
-    # timestamps?
-
     info = app_commands.Group(
         name="info", description="Get information about something"
     )
@@ -110,8 +91,11 @@ class Information(commands.Cog):
             ),
         )
         embed.add_field(
-            name="Servers",
-            value=int_fmt(guilds),
+            name="Installs",
+            value=(
+                f"{int_fmt(app_info.approximate_guild_count)} Servers\n"
+                f"{int_fmt(app_info.approximate_user_install_count)} Users"
+            ),
         )
         embed.add_field(
             name="Timeline",
@@ -120,6 +104,7 @@ class Information(commands.Cog):
                 f"Joined server: {relative_dt(interaction.guild.me.joined_at or discord.utils.utcnow())}\n"
                 f"Boot time: {relative_dt(self.bot.boot_time)}"
             ),
+            inline=False,
         )
 
         embed.set_footer(
@@ -158,7 +143,7 @@ class Information(commands.Cog):
             name="Members Info",
             value=(
                 f"{int_fmt(guild.member_count)} Members\n"
-                f"{int_fmt(len(guild.roles)-1)} Roles\n"
+                f"{int_fmt(len(guild.roles) - 1)} Roles\n"
             ),
         ).add_field(
             name=f"Nitro Level {guild.premium_tier}",
@@ -195,10 +180,38 @@ class Information(commands.Cog):
     ):
         """Send the information about the requested user / member."""
 
+        application_emojis = await self.bot.fetch_application_emojis()
+
+        def get_badge_emoji(badge: str) -> discord.Emoji | None:
+            for emoji in application_emojis:
+                if emoji.name == badge:
+                    return emoji
+
+            return None
+
         badges = []
+        emoji_warning = []
         for badge, is_set in user.public_flags:
-            if is_set and (emoji := BADGES.get(badge, None)):
-                badges.append(emoji)
+            if not is_set:
+                # skip if the flag is not set: the user does not have the badge
+                continue
+
+            emoji = get_badge_emoji(badge)
+            if emoji is not None:
+                badges.append(str(emoji))
+            else:
+                emoji_warning.append(badge)
+
+        if len(emoji_warning) != 0:
+            warning_str = ", ".join(emoji_warning)
+            LOGGER.warning(
+                "Some Application Emoji were not found, they will not show on profile: "
+                f"{warning_str}"
+            )
+            LOGGER.warning(
+                "Download the files at https://emoji.gg/pack/1834-profile-badges# "
+                "and name them according to discord.User.public_flags"
+            )
 
         embed = (
             discord.Embed(
@@ -213,7 +226,7 @@ class Information(commands.Cog):
                 ),
                 inline=False,
             )
-            .set_thumbnail(url=user.avatar.url if user.avatar else "")
+            .set_thumbnail(url=user.avatar.url if user.avatar else None)
         )
 
         if isinstance(user, discord.Member):
