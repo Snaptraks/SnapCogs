@@ -21,10 +21,10 @@
     ]
     dependencies = [
         "aiosqlite==0.21",
-        "discord-py>=2.4",
+        "discord-py>=2.5",
         "pillow>=10.0",
         "sqlalchemy[asyncio]>=2.0",
-    ]
+]
     description = "A collection of Cogs for discord.py bots."
     license = { file = "LICENSE.txt" }
     name = "snapcogs"
@@ -58,3 +58,8 @@
 
 [tool.uv.sources]
     snapcogs = { workspace = true }
+
+[dependency-groups]
+    dev = [
+        "rich>=13.9.4",
+    ]
