@@ -20,17 +20,17 @@
         "Topic :: Utilities",
     ]
     dependencies = [
-        "aiosqlite==0.21",
-        "discord-py>=2.5",
+        "aiosqlite>=0.21",
+        "discord-py==2.5.1",
         "pillow>=10.0",
         "sqlalchemy[asyncio]>=2.0,<3",
-]
+    ]
     description = "A collection of Cogs for discord.py bots."
     license = { file = "LICENSE.txt" }
     name = "snapcogs"
     readme = { file = "README.md", content-type = "text/markdown" }
     requires-python = ">=3.10"
-    version = "24.11.3"
+    version = "2025.03.1"
 
 [project.urls]
     "Bug Reports" = "https://github.com/Snaptraks/SnapCogs/issues"
