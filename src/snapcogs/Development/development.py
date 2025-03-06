@@ -43,7 +43,7 @@ async def to_units_autocomplete(
         choice_units = [
             app_commands.Choice(name=str(unit), value=str(unit))
             for unit in UREG.get_compatible_units(from_unit.dimensionality)
-            if current in str(unit)
+            if current.lower() in str(unit).lower()
         ][:25]
 
     else:
