@@ -686,7 +686,7 @@ wheels = [
 
 [[package]]
 name = "snapcogs"
-version = "2025.3.1"
+version = "2025.3.2"
 source = { editable = "." }
 dependencies = [
     { name = "aiosqlite" },
@@ -702,11 +702,11 @@ all = [
     { name = "python-dateutil" },
     { name = "pytz" },
 ]
-development = [
-    { name = "pint" },
-]
 horoscope = [
     { name = "beautifulsoup4" },
+]
+measurements = [
+    { name = "pint" },
 ]
 timestamps = [
     { name = "python-dateutil" },
@@ -724,13 +724,13 @@ requires-dist = [
     { name = "beautifulsoup4", marker = "extra == 'horoscope'", specifier = ">=4.9.3" },
     { name = "discord-py", specifier = "==2.5.1" },
     { name = "pillow", specifier = ">=10.0" },
-    { name = "pint", marker = "extra == 'development'", specifier = ">=0.19" },
+    { name = "pint", marker = "extra == 'measurements'", specifier = ">=0.19" },
     { name = "python-dateutil", marker = "extra == 'timestamps'", specifier = ">=2.0" },
     { name = "pytz", marker = "extra == 'timestamps'" },
-    { name = "snapcogs", extras = ["development", "horoscope", "timestamps"], marker = "extra == 'all'", editable = "." },
+    { name = "snapcogs", extras = ["horoscope", "measurements", "timestamps"], marker = "extra == 'all'", editable = "." },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0,<3" },
 ]
-provides-extras = ["all", "development", "horoscope", "timestamps"]
+provides-extras = ["all", "horoscope", "measurements", "timestamps"]
 
 [package.metadata.requires-dev]
 dev = [{ name = "rich", specifier = ">=13.9.4" }]

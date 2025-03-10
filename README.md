@@ -29,8 +29,8 @@ pip install -U "snapcogs[deps-here] @ git+https://github.com/Snaptraks/SnapCogs@
 ```
 
 where ``deps-here`` is a comma seperated list of the following:
-- ``development``
 - ``horoscope``
+- ``measurements``
 - ``timestamps``
 
 Then load the extensions in your bot's code **inside the ``setup_hook`` method**:
@@ -210,6 +210,16 @@ View information about a user / member. This includes individual user data such 
 ### ``Member > Info``
 
 Member context menu similar to the ``/info user`` command.
+
+## Measurements
+
+### ``/convert <value> <from> <to>``
+
+Convert a value from one unit to another. The `from` and `to` parameters have autocomplete enabled, suggesting different units as you are typing, according to dimentionality (either the units are of length, mass, time, etc.).
+
+## ``Message > Convert Units``
+
+Scans the message for specified quantities in metric or imperial system, and converts them to imperial or metric, respectively.
 
 ## Roles
 
