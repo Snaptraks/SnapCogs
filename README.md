@@ -177,10 +177,6 @@ Celebrate a member's birthday in the current server.
 
 Show information on up to 25 unicode characters. This includes unicode endpoints and string literals.
 
-### ``/convert <value> <from> <to>``
-
-Convert a value from one unit to another. The `from` and `to` parameters have autocomplete enabled, suggesting different units as you are typing, according to dimentionality (either the units are of length, mass, time, etc.).
-
 ## Fun
 
 ### ``/8ball <question>``

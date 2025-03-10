@@ -2,54 +2,10 @@ import re
 import unicodedata
 
 import discord
-import pint
 from discord import app_commands
 from discord.ext import commands
 
 from ..bot import Bot
-
-UREG = pint.UnitRegistry()
-UREG.default_system = None  # type: ignore
-
-
-def _extract_units():
-    units = []
-    for attr in dir(UREG):
-        try:
-            if isinstance(getattr(UREG, attr), pint.Unit):
-                units.append(attr)
-
-        except pint.UndefinedUnitError:
-            pass
-
-    return units
-
-
-UNITS = _extract_units()
-
-
-async def from_units_autocomplete(
-    interaction: discord.Interaction, current: str
-) -> list[app_commands.Choice[str]]:
-    choice_units = [u for u in UNITS if current.lower() in u.lower()][:25]
-    return [app_commands.Choice(name=unit, value=unit) for unit in choice_units]
-
-
-async def to_units_autocomplete(
-    interaction: discord.Interaction, current: str
-) -> list[app_commands.Choice[str]]:
-    if from_ := interaction.namespace["from"]:
-        from_unit = getattr(UREG, from_)
-        choice_units = [
-            app_commands.Choice(name=str(unit), value=str(unit))
-            for unit in UREG.get_compatible_units(from_unit.dimensionality)
-            if current.lower() in str(unit).lower()
-        ][:25]
-
-    else:
-        choice_units = await from_units_autocomplete(interaction, current)
-
-    return choice_units
 
 
 class Development(commands.Cog):
@@ -124,26 +80,3 @@ class Development(commands.Cog):
         )
 
         await interaction.response.send_message(embed=embed)
-
-    @app_commands.command()
-    @app_commands.rename(from_="from")
-    @app_commands.describe(
-        value="Value of the quantity",
-        from_="Units of the quantity",
-        to="Units to convert the quantity to",
-    )
-    @app_commands.autocomplete(from_=from_units_autocomplete, to=to_units_autocomplete)
-    async def convert(
-        self,
-        interaction: discord.Interaction,
-        value: float,
-        from_: str,
-        to: str,
-    ):
-        """Convert a value from one unit to another."""
-
-        quantity = UREG.Quantity(value, from_)
-
-        await interaction.response.send_message(
-            f"You converted `{quantity}` to `{quantity.to(to):.3g}`", ephemeral=True
-        )
