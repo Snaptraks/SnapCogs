@@ -209,7 +209,7 @@ View information about a user / member. This includes individual user data such 
 
 ### ``Member > Info``
 
-Member context menu sinilar to the ``/info user`` command.
+Member context menu similar to the ``/info user`` command.
 
 ## Roles
 
