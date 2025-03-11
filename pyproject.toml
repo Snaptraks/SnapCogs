@@ -21,7 +21,7 @@
     ]
     dependencies = [
         "aiosqlite>=0.21",
-        "discord-py==2.5.1",
+        "discord-py==2.5.2",
         "pillow>=10.0",
         "sqlalchemy[asyncio]>=2.0,<3",
     ]
