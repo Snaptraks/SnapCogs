@@ -4,7 +4,6 @@
 # https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference
 
 version: 2
-enable-beta-ecosystems: true
 updates:
   - package-ecosystem: "uv" # See documentation for possible values
     directory: "/" # Location of package manifests
