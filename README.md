@@ -18,13 +18,23 @@ This project is a collection of general-use modules, called Cogs, for discord bo
 
 To install the modules, you can install them directly from the repository's master branch:
 
-```
+```sh
+# with uv (recommended)
+uv init .  # if not already initiated
+uv add git+https://github.com/Snaptraks/SnapCogs@master
+
+# or with pip
 pip install -U "git+https://github.com/Snaptraks/SnapCogs@master"
 ```
 
 To install with optional dependencies, use:
 
-```
+```sh
+# with uv (recommended)
+uv init .  # if not already initiated
+uv add "snapcogs[deps-here] @ git+https://github.com/Snaptraks/SnapCogs@master"
+
+# or with pip
 pip install -U "snapcogs[deps-here] @ git+https://github.com/Snaptraks/SnapCogs@master"
 ```
 
