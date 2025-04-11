@@ -22,6 +22,10 @@ UREG = pint.UnitRegistry()
 UREG.default_system = None  # type: ignore
 UREG.formatter.default_format = ".3g~P"
 
+# define joke units
+UREG.define("banana = 178 millimeter")
+UREG.define("washing_machine = 70 * kilogram")
+
 
 METRIC = {
     UREG.millimeter,
@@ -31,6 +35,8 @@ METRIC = {
     UREG.gram,
     UREG.kilogram,
     UREG.degree_Celsius,
+    UREG.banana,
+    UREG.washing_machine,
 }
 
 IMPERIAL = {
@@ -41,6 +47,8 @@ IMPERIAL = {
     UREG.ounce,
     UREG.pound,
     UREG.degree_Fahrenheit,
+    UREG.banana,
+    UREG.washing_machine,
 }
 
 SYSTEMS = {
