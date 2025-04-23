@@ -7,7 +7,7 @@ from .models import Tip
 class TipCreate(ui.Modal, title="Tip Creation"):
     name = ui.TextInput(label="Name", placeholder="How do you want to name your tip?")
     content = ui.TextInput(
-        label="content",
+        label="Content",
         placeholder="What is your tip about?",
         style=discord.TextStyle.paragraph,
     )
