@@ -346,6 +346,10 @@ Similar to `app_commands.checks.has_permissions`, but operates on guild wide per
 
 Similar to `app_commands.checks.has_guild_permissions`, but checks the bot members guild permissions. Ported from `discord.ext.commands` and adapted for ApplicationCommands.
 
+### ``snapcogs.utils.checks.is_owner``
+
+Similar to `commands.checks.is_owner`, where it checks if the command author is the bot's owner, but adapted for ApplicationCommands. Raises a `snapcogs.utils.errors.NotOwner` exception if the command author is not the bot's owner.
+
 ### Views
 
 ### ``snapcogs.utils.views.Confirm``
@@ -363,6 +367,10 @@ Sends a message to the user from the interaction, with ``views.Confirm`` attache
 Application command transformers that converts an argument to a `discord.Message`. The `Bot` version ensures that the message's author was the bot itself.
 
 ### Errors
+
+### ``snapcogs.utils.errors.NotOwner``
+
+Exception raised by `snapcogs.utils.checks.is_owner` when the command author is not the bot's owner.
 
 ### ``snapcogs.utils.errors.TransformerMessageNotFound``
 
