@@ -22,7 +22,7 @@
     dependencies = [
         "aiosqlite>=0.21",
         "discord-py==2.5.2",
-        "pillow>=10.0",
+        "pillow>=11.3.0",
         "sqlalchemy[asyncio]>=2.0,<3",
     ]
     description = "A collection of Cogs for discord.py bots."
