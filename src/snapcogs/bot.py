@@ -1,5 +1,6 @@
 import logging
 import sys
+from importlib.metadata import version
 
 import aiohttp
 import discord
@@ -62,6 +63,7 @@ class Bot(commands.Bot):
                     "Versions:",
                     f"\tPython: {py_version.major}.{py_version.minor}.{py_version.micro}",
                     f"\tdiscord.py: {discord.__version__}",
+                    f"\tSnapCogs: {version('snapcogs')}",
                     "--------",
                     f"Use this link to invite {self.user.name}:",
                     f"{oauth_url}",
