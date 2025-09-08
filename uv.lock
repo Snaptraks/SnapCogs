@@ -720,7 +720,7 @@ wheels = [
 
 [[package]]
 name = "snapcogs"
-version = "2025.4.30"
+version = "2025.9.8"
 source = { editable = "." }
 dependencies = [
     { name = "aiosqlite" },
