@@ -221,9 +221,11 @@ class Announcements(commands.Cog):
         )
         next_birthday = get_next_occurence(next_birthday_date)
         next_birthday_members = [
-            await interaction.guild.fetch_member(bday.user_id)
+            await self.bot.get_or_fetch_member(interaction.guild, bday.user_id)
             for bday in next_birthdays
         ]
+        # filter out birthdays with None as members (they left the guild)
+        next_birthday_members = [m for m in next_birthday_members if m is not None]
         LOGGER.debug(
             f"Next birthday(s) on {next_birthday} for "
             f"{len(next_birthday_members)} members"
