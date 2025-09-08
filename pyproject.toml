@@ -29,7 +29,7 @@
     license = { file = "LICENSE.txt" }
     name = "snapcogs"
     readme = { file = "README.md", content-type = "text/markdown" }
-    requires-python = ">=3.10"
+    requires-python = ">=3.12"
     version = "2025.09.08"
 
 [project.urls]
