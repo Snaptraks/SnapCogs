@@ -21,7 +21,7 @@ async def run_process(command: LiteralString) -> tuple[str, str]:
     )
     result = await process.communicate()
 
-    return tuple(output.decode("utf-8", "ignore") for output in result)  # type: ignore
+    return tuple(output.decode("utf-8", "ignore") for output in result)  # type: ignore[correct-length]
 
 
 def cleanup_code(content: str) -> str:

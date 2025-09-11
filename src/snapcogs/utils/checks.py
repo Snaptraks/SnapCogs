@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 
-def has_guild_permissions(**perms: bool):
+def has_guild_permissions(**perms: bool) -> Callable:
     """Similar to :func:`.has_permissions`, but operates on guild wide
     permissions instead of the current channel permissions.
     If this check is called in a DM context, it will raise an
@@ -29,7 +29,8 @@ def has_guild_permissions(**perms: bool):
 
     invalid = set(perms) - set(discord.Permissions.VALID_FLAGS)
     if invalid:
-        raise TypeError(f"Invalid permission(s): {', '.join(invalid)}")
+        msg = f"Invalid permission(s): {', '.join(invalid)}"
+        raise TypeError(msg)
 
     def predicate(interaction: discord.Interaction) -> bool:
         if not interaction.guild:
@@ -49,7 +50,7 @@ def has_guild_permissions(**perms: bool):
     return check(predicate)
 
 
-def bot_has_guild_permissions(**perms: bool):
+def bot_has_guild_permissions(**perms: bool) -> Callable:
     """Similar to :func:`.has_guild_permissions`, but checks the bot
     members guild permissions.
 
@@ -58,13 +59,14 @@ def bot_has_guild_permissions(**perms: bool):
 
     invalid = set(perms) - set(discord.Permissions.VALID_FLAGS)
     if invalid:
-        raise TypeError(f"Invalid permission(s): {', '.join(invalid)}")
+        msg = f"Invalid permission(s): {', '.join(invalid)}"
+        raise TypeError(msg)
 
     def predicate(interaction: discord.Interaction) -> bool:
         if not interaction.guild:
             raise NoPrivateMessage
 
-        permissions = interaction.guild.me.guild_permissions  # type: ignore
+        permissions = interaction.guild.me.guild_permissions
         missing = [
             perm for perm, value in perms.items() if getattr(permissions, perm) != value
         ]
@@ -83,14 +85,13 @@ async def _is_owner(interaction: discord.Interaction) -> bool:
     if isinstance(interaction.client, commands.Bot):
         return await interaction.client.is_owner(interaction.user)
 
-    else:
-        app = await interaction.client.application_info()
+    app = await interaction.client.application_info()
 
-        if app.team:
-            ids = {m.id for m in app.team.members}
-            return interaction.user.id in ids
-        else:
-            return interaction.user.id == app.owner.id
+    if app.team:
+        ids = {m.id for m in app.team.members}
+        return interaction.user.id in ids
+
+    return interaction.user.id == app.owner.id
 
 
 def is_owner[T]() -> Callable[[T], T]:
@@ -100,7 +101,9 @@ def is_owner[T]() -> Callable[[T], T]:
 
     async def predicate(interaction: discord.Interaction) -> bool:
         if not await _is_owner(interaction):
-            raise NotOwner("You do not own this bot.")
+            msg = "You do not own this bot."
+            raise NotOwner(msg)
+
         return True
 
     return app_commands.check(predicate)

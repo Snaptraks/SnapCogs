@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import logging
+from typing import TYPE_CHECKING
 
 import discord
 from discord import app_commands
@@ -6,10 +9,12 @@ from discord.ext import commands
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
-from ..bot import Bot
 from ..utils.errors import TransformerMessageNotFound, TransformerNotBotMessage
-from ..utils.transformers import BotMessageTransformer
+from ..utils.transformers import BotMessageTransformer  # noqa: TC001
 from . import models, views
+
+if TYPE_CHECKING:
+    from ..bot import Bot
 
 LOGGER = logging.getLogger(__name__)
 
@@ -95,9 +100,7 @@ class Roles(commands.Cog):
 
         toggle = view_model.toggle
 
-        view = views.RolesView(roles, toggle=toggle, components_id=components_id)
-
-        return view
+        return views.RolesView(roles, toggle=toggle, components_id=components_id)
 
     async def roles_creation_selection(
         self,
@@ -146,7 +149,7 @@ class Roles(commands.Cog):
         """Generic callback to create a roles selection menu."""
 
         if channel is None:
-            channel = interaction.channel  # type: ignore
+            channel = interaction.channel  # type: ignore[reportAssignmentType]
 
         assert channel is not None
 
@@ -159,8 +162,7 @@ class Roles(commands.Cog):
     @roles.command(name="select")
     @app_commands.describe(
         channel=(
-            "Channel to send the roles selection menu to. "
-            "Defaults to current channel."
+            "Channel to send the roles selection menu to. Defaults to current channel."
         ),
         content="Text in the message to send with the roles selection menu.",
     )
@@ -177,8 +179,7 @@ class Roles(commands.Cog):
     @roles.command(name="toggle")
     @app_commands.describe(
         channel=(
-            "Channel to send the roles selection menu to. "
-            "Defaults to current channel."
+            "Channel to send the roles selection menu to. Defaults to current channel."
         ),
         content="Text in the message to send with the roles selection menu.",
     )
@@ -226,7 +227,7 @@ class Roles(commands.Cog):
             color=discord.Color.green(),
             title="Successfully edited selection.",
             description=(
-                f"Role(s) {roles_str} added to the " f"[message]({message.jump_url})."
+                f"Role(s) {roles_str} added to the [message]({message.jump_url})."
             ),
         )
 
@@ -269,8 +270,7 @@ class Roles(commands.Cog):
             color=discord.Color.green(),
             title="Successfully edited selection.",
             description=(
-                f"Role(s) {roles_str} removed from the "
-                f"[message]({message.jump_url})."
+                f"Role(s) {roles_str} removed from the [message]({message.jump_url})."
             ),
         )
 
@@ -379,32 +379,32 @@ class Roles(commands.Cog):
                 )
             )
 
-        assert view_model is not None
+        if view_model is None:
+            msg = "There is no view associated with the message."
+            raise ValueError(msg)
+
         return view_model
 
     async def _save_view(self, role_view: models.View) -> None:
         """Save the View information."""
 
-        async with self.bot.db.session() as session:
-            async with session.begin():
-                session.add(role_view)
+        async with self.bot.db.session() as session, session.begin():
+            session.add(role_view)
 
     async def _delete_roles(self, role_models: list[models.Role]) -> None:
         """Delete roles information from the Database."""
 
-        async with self.bot.db.session() as session:
-            async with session.begin():
-                for role in role_models:
-                    await session.delete(role)
+        async with self.bot.db.session() as session, session.begin():
+            for role in role_models:
+                await session.delete(role)
 
     async def _delete_view_from_message(self, message: discord.Message) -> None:
         """Delete the view and all the referencing rows in the other tables."""
 
         # delete should cascade
-        async with self.bot.db.session() as session:
-            async with session.begin():
-                view_model = await session.scalar(
-                    select(models.View).where(models.View.message_id == message.id)
-                )
+        async with self.bot.db.session() as session, session.begin():
+            view_model = await session.scalar(
+                select(models.View).where(models.View.message_id == message.id)
+            )
 
-                await session.delete(view_model)
+            await session.delete(view_model)

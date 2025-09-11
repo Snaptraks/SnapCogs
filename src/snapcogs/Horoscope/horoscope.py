@@ -32,7 +32,10 @@ class ZodiacSign(IntEnum):
 
 
 ZODIAC_EMOJIS = {
-    zodiac_sign: f"https://raw.githubusercontent.com/twitter/twemoji/refs/heads/master/assets/72x72/{hex(9799+zodiac_sign)[2:]}.png"
+    zodiac_sign: (
+        "https://raw.githubusercontent.com/twitter/twemoji/"
+        f"refs/heads/master/assets/72x72/{9799 + zodiac_sign:x}.png"
+    )
     for zodiac_sign in ZodiacSign
 }
 
@@ -50,7 +53,8 @@ async def get_today_horoscope(
         assert data.p is not None
         _, horoscope_data = data.p.text.split(" - ", 1)
     else:
-        raise ValueError("Returned data not in the expected type.")
+        msg = "Returned data not in the expected type."
+        raise TypeError(msg)
 
     return horoscope_data
 
@@ -69,12 +73,13 @@ async def get_today_star_rating(
         categories = data.find_all("h3")
         texts = data.find_all("p")[:-1]
     else:
-        raise ValueError("Returned data not in the expected type.")
+        msg = "Returned data not in the expected type."
+        raise TypeError(msg)
 
-    star_ratings = []
+    star_ratings: list[tuple[str, str]] = []
     for c, t in zip(categories, texts, strict=True):
         stars = "\N{WHITE MEDIUM STAR}" * len(
-            c.find_all("i", attrs={"class": "highlight"})
+            c.find_all("i", attrs={"class": "highlight"})  # type: ignore[reportAttributeAccessIssue]
         )
 
         star_ratings.append(
@@ -103,6 +108,8 @@ class Horoscope(commands.Cog):
         today = discord.utils.utcnow()
         horoscope = await get_today_horoscope(self.bot.http_session, zodiac_sign)
         star_ratings = await get_today_star_rating(self.bot.http_session, zodiac_sign)
+        zodiac_name = zodiac_sign.name.title()
+        author_name = interaction.user.display_name
 
         embed = (
             discord.Embed(
@@ -112,7 +119,7 @@ class Horoscope(commands.Cog):
             .set_thumbnail(url=ZODIAC_EMOJIS[zodiac_sign])
             .add_field(
                 name=discord.utils.format_dt(today, style="D"),
-                value=horoscope,
+                value=horoscope.replace(zodiac_name, author_name),
                 inline=False,
             )
         )

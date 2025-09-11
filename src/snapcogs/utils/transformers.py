@@ -9,12 +9,15 @@ class MessageTransformer(app_commands.Transformer):
     """Transformer that wraps a MessageConverter to allow convertion in AppCommands."""
 
     @classmethod
-    async def transform(cls, interaction: discord.Interaction, value: str):
+    async def transform(
+        cls, interaction: discord.Interaction, value: str
+    ) -> discord.Message:
         ctx = await commands.Context.from_interaction(interaction)
         try:
             msg = await commands.MessageConverter().convert(ctx, value)
         except commands.BadArgument as e:
-            raise TransformerMessageNotFound(value, cls.type, cls, e)
+            raise TransformerMessageNotFound(value, cls.type, cls, e) from e
+
         return msg
 
 
@@ -22,11 +25,13 @@ class BotMessageTransformer(MessageTransformer):
     """MessageTransformer that raises an error if the message is not from the bot."""
 
     @classmethod
-    async def transform(cls, interaction: discord.Interaction, value: str):
+    async def transform(
+        cls, interaction: discord.Interaction, value: str
+    ) -> discord.Message:
         msg = await super().transform(interaction, value)
         assert interaction.guild is not None
 
         if msg.author != interaction.guild.me:
-            raise TransformerNotBotMessage()
+            raise TransformerNotBotMessage
 
         return msg

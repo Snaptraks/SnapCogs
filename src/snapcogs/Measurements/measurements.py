@@ -9,17 +9,17 @@ import pint
 from discord import app_commands
 from discord.ext import commands
 
-from ..bot import Bot
-
 if TYPE_CHECKING:
     from pint.facets.plain import PlainQuantity
+
+    from ..bot import Bot
 
 
 LOGGER = logging.getLogger(__name__)
 
 
 UREG = pint.UnitRegistry()
-UREG.default_system = None  # type: ignore
+UREG.default_system = None  # type: ignore[reportAttributeAccessIssue]
 UREG.formatter.default_format = ".3g~P"
 
 # define joke units
@@ -81,7 +81,7 @@ UNITS = _extract_units()
 
 
 async def from_units_autocomplete(
-    interaction: discord.Interaction, current: str
+    _: discord.Interaction, current: str
 ) -> list[app_commands.Choice[str]]:
     """Autocomplete function that returns the units that contain the current string.
 
@@ -207,9 +207,8 @@ def convert_to_other(measurement: PlainQuantity) -> list[PlainQuantity]:
         target_system = "mks"
 
     else:
-        raise ValueError(
-            f"{measurement.units} not defined in metric or imperial system."
-        )
+        msg = f"{measurement.units} not defined in metric or imperial system."
+        raise ValueError(msg)
 
     target_units = (
         UREG.get_compatible_units(
@@ -247,11 +246,11 @@ def convert_to_other_temperature(measurement: PlainQuantity) -> PlainQuantity:
     if measurement.units == UREG.degree_Celsius:
         return measurement.to(UREG.degree_Fahrenheit)
 
-    elif measurement.units == UREG.degree_Fahrenheit:
+    if measurement.units == UREG.degree_Fahrenheit:
         return measurement.to(UREG.degree_Celsius)
 
-    else:
-        raise ValueError(f"Wrong temperature unit {measurement.units}.")
+    msg = f"Wrong temperature unit {measurement.units}."
+    raise ValueError(msg)
 
 
 class Measurements(commands.Cog):

@@ -17,7 +17,7 @@ from .models import Tip, TipCounts
 LOGGER = logging.getLogger(__name__)
 
 
-def rank_emoji(n: int):
+def rank_emoji(n: int) -> str:
     """Return emojis from one (gold medal) to ten.
     To be used with enumerate(), therefore index 0 returns :first_place: and index 9
     returns :ten:.
@@ -27,15 +27,14 @@ def rank_emoji(n: int):
         # :first_place: == \U0001f947 == chr(129351)
         return chr(129351 + n)
 
-    elif 3 <= n <= 8:
+    if 3 <= n <= 8:
         # :four: == \u0034\ufe0f\u20e3 == chr(52)\ufe0f\u20e3
         return f"{chr(52 + n - 3)}\ufe0f\u20e3"
 
-    elif n == 9:
+    if n == 9:
         return "\N{KEYCAP TEN}"
 
-    else:
-        raise ValueError
+    raise ValueError
 
 
 class Tips(commands.Cog):
@@ -425,10 +424,7 @@ class Tips(commands.Cog):
                 title="List of Tips",
                 color=discord.Color.blurple(),
                 description="\n".join(
-                    (
-                        f"`{tip.id:>{max_id_length}d}` {tip.name} "
-                        f"(<@{tip.author_id}>)"
-                    )
+                    (f"`{tip.id:>{max_id_length}d}` {tip.name} (<@{tip.author_id}>)")
                     for tip in tips
                 ),
             ).set_author(
@@ -464,10 +460,7 @@ class Tips(commands.Cog):
         embed.add_field(
             name="Top Tips",
             value="\n".join(
-                (
-                    f"{rank_emoji(n)}: {tip.name} "
-                    f"(<@{tip.author_id}>, {tip.uses} uses)"
-                )
+                (f"{rank_emoji(n)}: {tip.name} (<@{tip.author_id}>, {tip.uses} uses)")
                 for n, tip in enumerate(top_tips)
             ),
             inline=False,
@@ -539,9 +532,8 @@ class Tips(commands.Cog):
     async def _save_tip(self, tip: Tip) -> None:
         """Save a tip to the database."""
 
-        async with self.bot.db.session() as session:
-            async with session.begin():
-                session.add(tip)
+        async with self.bot.db.session() as session, session.begin():
+            session.add(tip)
 
         LOGGER.debug(f"Tip {tip.name} saved.")
 
@@ -554,18 +546,17 @@ class Tips(commands.Cog):
     ) -> None:
         """Edit a tip in the database."""
 
-        async with self.bot.db.session() as session:
-            async with session.begin():
-                await session.execute(
-                    update(Tip)
-                    .values(
-                        author_id=author_id or tip.author_id,
-                        content=content or tip.content,
-                        name=name or tip.name,
-                        last_edited=discord.utils.utcnow(),
-                    )
-                    .where(Tip.id == tip.id)
+        async with self.bot.db.session() as session, session.begin():
+            await session.execute(
+                update(Tip)
+                .values(
+                    author_id=author_id or tip.author_id,
+                    content=content or tip.content,
+                    name=name or tip.name,
+                    last_edited=discord.utils.utcnow(),
                 )
+                .where(Tip.id == tip.id)
+            )
 
         LOGGER.debug(f"Tip {tip.id} edited.")
 
@@ -715,10 +706,7 @@ class Tips(commands.Cog):
                 .limit(amount)
             )
 
-        top_authors = [
-            TipCounts(author_id=result[0], tips=result[1]) for result in results
-        ]
-        return top_authors
+        return [TipCounts(author_id=result[0], tips=result[1]) for result in results]
 
     async def _get_member_totals(self, member: discord.Member) -> TipCounts:
         """Get count of tips and total uses from the given member."""
@@ -760,34 +748,31 @@ class Tips(commands.Cog):
     async def _increase_tip_uses(self, tip: Tip) -> None:
         """Increase the use of tip with tip_id by 1."""
 
-        async with self.bot.db.session() as session:
-            async with session.begin():
-                await session.execute(
-                    update(Tip).where(Tip.id == tip.id).values(uses=tip.uses + 1)
-                )
+        async with self.bot.db.session() as session, session.begin():
+            await session.execute(
+                update(Tip).where(Tip.id == tip.id).values(uses=tip.uses + 1)
+            )
 
         LOGGER.debug(f"Increased uses for {tip.id=}")
 
     async def _delete_tip(self, tip: Tip) -> None:
         """Delete a tip from the database."""
 
-        async with self.bot.db.session() as session:
-            async with session.begin():
-                await session.execute(delete(Tip).where(Tip.id == tip.id))
+        async with self.bot.db.session() as session, session.begin():
+            await session.execute(delete(Tip).where(Tip.id == tip.id))
 
         LOGGER.debug(f"Deleted tip with {tip.id=}")
 
     async def _delete_member_tips(self, member: discord.Member) -> None:
         """Delete all tips from a member, in a specific server."""
 
-        async with self.bot.db.session() as session:
-            async with session.begin():
-                result = await session.execute(
-                    delete(Tip).where(
-                        Tip.guild_id == member.guild.id,
-                        Tip.author_id == member.id,
-                    )
+        async with self.bot.db.session() as session, session.begin():
+            result = await session.execute(
+                delete(Tip).where(
+                    Tip.guild_id == member.guild.id,
+                    Tip.author_id == member.id,
                 )
+            )
 
         deleted = result.rowcount
 

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import datetime
 import itertools
@@ -5,6 +7,7 @@ import logging
 import random
 from enum import Enum
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import discord
 from discord import app_commands
@@ -13,10 +16,14 @@ from discord.utils import format_dt
 from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 
-from ..bot import Bot
 from ..utils import relative_dt
 from ..utils.views import confirm_prompt
 from .models import Birthday
+
+if TYPE_CHECKING:
+    from asyncio import Task
+
+    from ..bot import Bot
 
 LOGGER = logging.getLogger(__name__)
 SQL = Path(__file__).parent / "sql"
@@ -59,17 +66,18 @@ class Announcements(commands.Cog):
         name="birthday", description="Save and celebrate server members' birthday!"
     )
 
-    def __init__(self, bot: Bot):
+    def __init__(self, bot: Bot) -> None:
         self.bot = bot
+        self.birthday_tasks: set[Task] = set()
 
-    async def cog_load(self):
+    async def cog_load(self) -> None:
         self.birthday_announcement.start()
 
-    async def cog_unload(self):
+    async def cog_unload(self) -> None:
         self.birthday_announcement.cancel()
 
     @tasks.loop(time=datetime.time(hour=12, tzinfo=datetime.UTC))
-    async def birthday_announcement(self):
+    async def birthday_announcement(self) -> None:
         """Accounce the birthday of a member.
         Birthdays need to be registered by the member beforehand
         with the `/birthday register` command.
@@ -82,6 +90,7 @@ class Announcements(commands.Cog):
             if guild is None:
                 # Bot left the guild maybe?
                 continue
+
             try:
                 member = await self.bot.get_or_fetch_member(guild, bday.user_id)
                 if member is None:
@@ -90,17 +99,20 @@ class Announcements(commands.Cog):
                     continue
                 # if we bring back the Birthday role,
                 # this needs to be called as a task
-                asyncio.create_task(self.birthday_task(member))
+                task = asyncio.create_task(self.birthday_task(member))
+                self.birthday_tasks.add(task)
+
+                task.add_done_callback(self.birthday_tasks.discard)
             except discord.NotFound:
-                LOGGER.error(
+                LOGGER.exception(
                     f"Member {bday.user_id} was not found in guild {guild.id}."
                 )
 
     @birthday_announcement.before_loop
-    async def birthday_announcement_before(self):
+    async def birthday_announcement_before(self) -> None:
         await self.bot.wait_until_ready()
 
-    async def birthday_task(self, member: discord.Member):
+    async def birthday_task(self, member: discord.Member) -> None:
         """Task to send the birthday Embed to the member's guild's system channel."""
         if member.guild.system_channel is None:
             LOGGER.debug(
@@ -123,7 +135,7 @@ class Announcements(commands.Cog):
                     "Want to celebrate your birthday too? "
                     "Register with /birthday register."
                 ),
-                icon_url="https://em-content.zobj.net/thumbs/160/twitter/351/information_2139-fe0f.png",  # noqa
+                icon_url="https://em-content.zobj.net/thumbs/160/twitter/351/information_2139-fe0f.png",
             )
         )
         message = await member.guild.system_channel.send(embed=embed)
@@ -146,7 +158,7 @@ class Announcements(commands.Cog):
         interaction: discord.Interaction,
         month: Month,
         day: app_commands.Range[int, 1, 31],
-    ):
+    ) -> None:
         """Register your birthday in this server."""
 
         if isinstance(interaction.user, discord.User):
@@ -171,7 +183,7 @@ class Announcements(commands.Cog):
     @birthday_register.error
     async def birthday_register_error(
         self, interaction: discord.Interaction, error: app_commands.AppCommandError
-    ):
+    ) -> None:
         """Error handler for the birthday register subcommand."""
 
         error = getattr(error, "original", error)
@@ -195,7 +207,7 @@ class Announcements(commands.Cog):
             interaction.extras["error_handled"] = False
 
     @birthday.command(name="next")
-    async def birthday_next(self, interaction: discord.Interaction):
+    async def birthday_next(self, interaction: discord.Interaction) -> None:
         """Display the next birthday in the server."""
 
         if interaction.guild is None:
@@ -263,10 +275,12 @@ class Announcements(commands.Cog):
     @app_commands.describe(member="The person whose birthday is today!")
     async def birthday_celebrate(
         self, interaction: discord.Interaction, member: discord.Member
-    ):
+    ) -> None:
         """Celebrate a member's birthday!"""
 
-        asyncio.create_task(self.birthday_task(member))
+        task = asyncio.create_task(self.birthday_task(member))
+        self.birthday_tasks.add(task)
+        task.add_done_callback(self.birthday_tasks.discard)
         await interaction.response.send_message(
             f"Thank you for celebrating {member.mention}!", ephemeral=True
         )
@@ -274,7 +288,7 @@ class Announcements(commands.Cog):
     @birthday_celebrate.error
     async def birthday_celebrate_error(
         self, interaction: discord.Interaction, error: app_commands.AppCommandError
-    ):
+    ) -> None:
         """Error handler for the birthday celebrate subcommand."""
 
         error = getattr(error, "original", error)
@@ -290,7 +304,7 @@ class Announcements(commands.Cog):
             interaction.extras["error_handled"] = False
 
     @birthday.command(name="delete")
-    async def birthday_delete(self, interaction: discord.Interaction):
+    async def birthday_delete(self, interaction: discord.Interaction) -> None:
         """Delete your registered birthday."""
 
         if isinstance(interaction.user, discord.User):
@@ -348,14 +362,12 @@ class Announcements(commands.Cog):
         """Get a member's birthday."""
 
         async with self.bot.db.session() as session:
-            birthday = await session.scalar(
+            return await session.scalar(
                 select(Birthday).where(
                     Birthday.guild_id == member.guild.id,
                     Birthday.user_id == member.id,
                 )
             )
-
-        return birthday
 
     async def _get_today_birthdays(
         self, guild: discord.Guild | None = None
@@ -378,15 +390,14 @@ class Announcements(commands.Cog):
     ) -> None:
         """Save the birthday to the database."""
 
-        async with self.bot.db.session() as session:
-            async with session.begin():
-                session.add(
-                    Birthday(
-                        birthday=birthday,
-                        guild_id=member.guild.id,
-                        user_id=member.id,
-                    )
+        async with self.bot.db.session() as session, session.begin():
+            session.add(
+                Birthday(
+                    birthday=birthday,
+                    guild_id=member.guild.id,
+                    user_id=member.id,
                 )
+            )
 
     async def _delete_birthday(self, member: discord.Member) -> None:
         """Remove the member's birthday from the database."""

@@ -1,28 +1,33 @@
-import asyncio
-from contextlib import redirect_stdout
+from __future__ import annotations
+
 import inspect
 import io
 import traceback
-from typing import Optional, Literal
+from contextlib import redirect_stdout
+from typing import TYPE_CHECKING, Literal
 
 import discord
 from discord.ext import commands
 
-from ..bot import Bot
 from ..utils import cleanup_code
 
+if TYPE_CHECKING:
+    from discord.ext.commands import Context
 
-def get_syntax_error(e):
+    from ..bot import Bot
+
+
+def get_syntax_error(e: SyntaxError) -> str:
     if e.text is None:
         return f"```py\n{e.__class__.__name__}: {e}\n```"
-    return f"```py\n{e.text}{'^':>{e.offset}}\n" f"{e.__class__.__name__}: {e}```"
+    return f"```py\n{e.text}{'^':>{e.offset}}\n{e.__class__.__name__}: {e}```"
 
 
 class Admin(commands.Cog):
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
 
-    async def cog_check(self, ctx):
+    async def cog_check(self, ctx: Context) -> bool:  # type: ignore[reportIncompatibleMethodOverride]
         return await self.bot.is_owner(ctx.author)
 
     @commands.command()
@@ -30,9 +35,9 @@ class Admin(commands.Cog):
     @commands.is_owner()
     async def sync(
         self,
-        ctx: commands.Context,
+        ctx: Context,
         guilds: commands.Greedy[discord.Object],
-        spec: Optional[Literal["~", "*", "^"]] = None,
+        spec: Literal["~", "*", "^"] | None = None,
     ) -> None:
         """Sync AppCommands to guilds, or globally.
         The `spec` argument works as follow:
@@ -76,7 +81,7 @@ class Admin(commands.Cog):
 
     @commands.command()
     @commands.max_concurrency(1, commands.BucketType.channel)
-    async def repl(self, ctx):
+    async def repl(self, ctx: Context) -> None:  # noqa: C901, PLR0912, PLR0915
         """Launch an interactive REPL session."""
 
         variables = {
@@ -90,10 +95,10 @@ class Admin(commands.Cog):
         }
 
         await ctx.reply(
-            "Enter code to execute or evaluate. " "`exit()` or `quit` to exit."
+            "Enter code to execute or evaluate. `exit()` or `quit` to exit."
         )
 
-        def check(m):
+        def check(m: discord.Message) -> bool:
             return (
                 m.author.id == ctx.author.id
                 and m.channel.id == ctx.channel.id
@@ -105,7 +110,7 @@ class Admin(commands.Cog):
                 response = await self.bot.wait_for(
                     "message", check=check, timeout=10.0 * 60.0
                 )
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 await ctx.reply("Exiting REPL session.")
                 break
 
@@ -113,7 +118,7 @@ class Admin(commands.Cog):
 
             if cleaned in ("quit", "exit", "exit()"):
                 await response.reply("Exiting.")
-                return None
+                return
 
             executor = exec
             if cleaned.count("\n") == 0:
@@ -139,10 +144,10 @@ class Admin(commands.Cog):
 
             try:
                 with redirect_stdout(stdout):
-                    result = executor(code, variables)
+                    result = executor(code, variables)  # type: ignore[reportPossiblyUnboundVariable]
                     if inspect.isawaitable(result):
                         result = await result
-            except Exception:
+            except Exception:  # noqa: BLE001
                 value = stdout.getvalue()
                 fmt = f"```py\n{value}{traceback.format_exc()}\n```"
             else:
@@ -165,12 +170,12 @@ class Admin(commands.Cog):
                 await response.reply(f"Unexpected error: `{e}`")
 
     @repl.error
-    async def repl_error(self, ctx, error):
+    async def repl_error(self, ctx: Context, error: Exception) -> None:
         """Error hangling for the repl command."""
 
         if isinstance(error, commands.MaxConcurrencyReached):
             await ctx.reply(
-                "Already running a REPL session. " "Exit it with `exit` or `quit`."
+                "Already running a REPL session. Exit it with `exit` or `quit`."
             )
 
         else:

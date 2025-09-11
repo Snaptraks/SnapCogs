@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import logging
 import sys
 from importlib.metadata import version
+from typing import TYPE_CHECKING
 
 import aiohttp
 import discord
@@ -9,18 +12,22 @@ from discord.ext import commands
 from .database import Database
 from .tree import CommandTree
 
+if TYPE_CHECKING:
+    from typing import Any, Self
+
+
 LOGGER = logging.getLogger(__name__)
 
 
-class Bot(commands.Bot):
-    def __init__(self, *args, **kwargs):
-        self.db_name = kwargs.get("db_name", None)
+class Bot[**BotP](commands.Bot):
+    def __init__(self: Self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
+        self.db_name = kwargs.get("db_name")
         self.permissions = kwargs.get("permissions", discord.Permissions.text())
         self.startup_extensions = kwargs.get("startup_extensions", [])
         kwargs["tree_cls"] = kwargs.get("tree_cls", CommandTree)
         super().__init__(*args, **kwargs)
 
-    async def setup_hook(self):
+    async def setup_hook(self) -> None:
         # Create HTTP session
         self.http_session = aiohttp.ClientSession()
 
@@ -31,8 +38,8 @@ class Bot(commands.Bot):
             try:
                 LOGGER.debug(f"Loading {extension}... ")
                 await self.load_extension(extension)
-            except Exception as error:
-                LOGGER.error(error, exc_info=error)
+            except Exception:
+                LOGGER.exception(f"Exception while loading {extension}")
             else:
                 LOGGER.debug(f"{extension} loaded successfully.")
 
@@ -40,14 +47,14 @@ class Bot(commands.Bot):
 
         self.boot_time = discord.utils.utcnow()
 
-    async def close(self):
+    async def close(self) -> None:
         """Subclass the close() method to close the HTTP Session."""
 
         await self.http_session.close()
         await self.db.engine.dispose()
         await super().close()
 
-    async def on_ready(self):
+    async def on_ready(self) -> None:
         if self.user is None:
             # everything below assumes self.user is not None, so we return
             # early if it is
@@ -55,21 +62,17 @@ class Bot(commands.Bot):
         oauth_url = discord.utils.oauth_url(self.user.id, permissions=self.permissions)
         py_version = sys.version_info
         LOGGER.info(
-            "\n".join(
-                [
-                    "Login Info",
-                    f"Logged in as {self.user.name} (ID:{self.user.id})",
-                    "--------",
-                    "Versions:",
-                    f"\tPython: {py_version.major}.{py_version.minor}.{py_version.micro}",
-                    f"\tdiscord.py: {discord.__version__}",
-                    f"\tSnapCogs: {version('snapcogs')}",
-                    "--------",
-                    f"Use this link to invite {self.user.name}:",
-                    f"{oauth_url}",
-                    "--------",
-                ]
-            )
+            "Login Info\n"
+            f"Logged in as {self.user.name} (ID:{self.user.id})\n"
+            "--------\n"
+            "Versions:\n"
+            f"\tPython: {py_version.major}.{py_version.minor}.{py_version.micro}\n"
+            f"\tdiscord.py: {discord.__version__}\n"
+            f"\tSnapCogs: {version('snapcogs')}\n"
+            "--------\n"
+            f"Use this link to invite {self.user.name}:\n"
+            f"{oauth_url}\n"
+            "--------\n"
         )
 
     async def on_command_error(

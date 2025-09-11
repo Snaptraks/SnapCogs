@@ -10,7 +10,7 @@ LOGGER = logging.getLogger(__name__)
 class CommandTree(app_commands.CommandTree):
     async def on_error(
         self, interaction: discord.Interaction, error: app_commands.AppCommandError
-    ):
+    ) -> None:
         """Error handler that sends unhandled errors to the logger.
 
         To make sure errors are logged here even when application commands have
@@ -41,7 +41,7 @@ class CommandTree(app_commands.CommandTree):
                 await self._on_cooldown(interaction, error)
             else:
                 LOGGER.error(
-                    f"Ignoring exception in command ({interaction.data['name']})",
+                    f"Ignoring exception in command ({interaction.data['name']})",  # type: ignore[not-none]
                     exc_info=error,
                 )
         else:
@@ -49,14 +49,14 @@ class CommandTree(app_commands.CommandTree):
 
     async def _on_cooldown(
         self, interaction: discord.Interaction, error: app_commands.CommandOnCooldown
-    ):
+    ) -> None:
         retry_in = discord.utils.format_dt(
             discord.utils.utcnow() + timedelta(seconds=error.retry_after),
             style="R",
         )
         embed = discord.Embed(
             color=discord.Color.red(),
-            title=f"Command `/{interaction.data['name']}` is on cooldown!",
+            title=f"Command `/{interaction.data['name']}` is on cooldown!",  # type: ignore[not-none]
             description=f"Try again {retry_in}.",
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)

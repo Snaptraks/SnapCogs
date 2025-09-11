@@ -16,7 +16,7 @@ class Development(commands.Cog):
     @app_commands.describe(
         characters="Characters to get the unicode representation of.",
     )
-    async def charinfo(self, interaction: discord.Interaction, characters: str):
+    async def charinfo(self, interaction: discord.Interaction, characters: str) -> None:
         """Show information on up to 25 unicode characters.
 
         Adapted from
@@ -44,18 +44,15 @@ class Development(commands.Cog):
             await interaction.response.send_message(embed=embed)
             return
 
-        def get_info(char):
+        def get_info(char: str):  # noqa: ANN202
             digit = f"{ord(char):x}"
-            if len(digit) <= 4:
-                u_code = f"\\u{digit:>04}"
-            else:
-                u_code = f"\\U{digit:>08}"
+            u_code = f"\\u{digit:>04}" if len(digit) <= 4 else f"\\U{digit:>08}"
             url = f"https://www.compart.com/en/unicode/U+{digit:>04}"
             name = f"[{unicodedata.name(char, '')}]({url})"
             info = f"`{u_code.ljust(10)}`: {name} - {char}"
             return info, u_code
 
-        charlist, rawlist = zip(*(get_info(c) for c in characters))
+        charlist, rawlist = zip(*(get_info(c) for c in characters), strict=False)
 
         embed = discord.Embed(
             description="\n".join(charlist), color=discord.Color.blurple()

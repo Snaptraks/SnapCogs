@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Self
 
 import pytz
 
@@ -16,10 +18,10 @@ class TZChoice:
     def __hash__(self) -> int:
         return hash(self.utcoffset_str())
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Self) -> bool:  # type: ignore[reportIncompatibleMethodOverride]
         return self.utcoffset_str() == other.utcoffset_str()
 
-    def __lt__(self, other) -> bool:
+    def __lt__(self, other: Self) -> bool:  # type: ignore[reportIncompatibleMethodOverride]
         return int(self.utcoffset_str()) < int(other.utcoffset_str())
 
     def __repr__(self) -> str:
@@ -27,10 +29,9 @@ class TZChoice:
 
     def now(self) -> datetime:
         tzone = pytz.timezone(self.name)
-        now = datetime.now(tzone)
-        return now
+        return datetime.now(tzone)
 
-    def utcoffset_str(self, dt: Optional[datetime] = None) -> str:
+    def utcoffset_str(self, dt: datetime | None = None) -> str:
         if dt is None:
             dt = self.now()
         return f"{dt:%z}"
@@ -40,7 +41,7 @@ class TZChoice:
         return (self.utcoffset, self.dstoffset)
 
     @property
-    def choice_str(self):
+    def choice_str(self) -> str:
         now = self.now()
         return (
             f"{self.abbrev} ({now:%H:%M}, UTC{self.utcoffset_str(now)}"

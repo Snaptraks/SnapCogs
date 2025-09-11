@@ -1,5 +1,4 @@
 import logging
-from typing import Union
 
 import discord
 from discord import app_commands
@@ -11,7 +10,7 @@ from ..utils import relative_dt, run_process
 LOGGER = logging.getLogger(__name__)
 
 
-def int_fmt(number, digits=3):
+def int_fmt(number: int, digits: int = 3) -> str:
     return f"`{number:>{digits}d}`"
 
 
@@ -30,7 +29,7 @@ class Information(commands.Cog):
         self.bot.tree.add_command(self.info_user_context_menu)
 
     @app_commands.command()
-    async def about(self, interaction: discord.Interaction):
+    async def about(self, interaction: discord.Interaction) -> None:
         """View information about the bot itself."""
 
         assert self.bot.user is not None
@@ -40,10 +39,7 @@ class Information(commands.Cog):
         # host should have git installed if they installed this package
         git_link, _ = await run_process("git config --get remote.origin.url")
 
-        if self.bot.user.avatar:
-            thumbnail_url = self.bot.user.avatar.url
-        else:
-            thumbnail_url = ""
+        thumbnail_url = self.bot.user.avatar.url if self.bot.user.avatar else ""
 
         embed = discord.Embed(
             title=f"Information about {self.bot.user}.",
@@ -65,9 +61,7 @@ class Information(commands.Cog):
 
         text_channels = 0
         voice_channels = 0
-        guilds = 0
         for guild in self.bot.guilds:
-            guilds += 1
             for channel in guild.channels:
                 if isinstance(channel, discord.TextChannel):
                     text_channels += 1
@@ -116,14 +110,15 @@ class Information(commands.Cog):
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @info.command(name="server")
-    async def info_guild(self, interaction: discord.Interaction):
+    async def info_guild(self, interaction: discord.Interaction) -> None:
         """View information about the current server."""
 
         guild = interaction.guild
         if guild is None:
-            return await interaction.response.send_message(
+            await interaction.response.send_message(
                 "Cannot use this command in private messages.", ephemeral=True
             )
+            return
 
         embed = discord.Embed(title=guild.name, color=discord.Color.blurple())
         description = f"Server created {relative_dt(guild.created_at)}."
@@ -142,7 +137,7 @@ class Information(commands.Cog):
         embed.add_field(
             name="Members Info",
             value=(
-                f"{int_fmt(guild.member_count)} Members\n"
+                f"{int_fmt(guild.member_count)} Members\n"  # type: ignore[not-none]
                 f"{int_fmt(len(guild.roles) - 1)} Roles\n"
             ),
         ).add_field(
@@ -167,8 +162,8 @@ class Information(commands.Cog):
     async def info_user(
         self,
         interaction: discord.Interaction,
-        user: Union[discord.Member, discord.User],
-    ):
+        user: discord.Member | discord.User,
+    ) -> None:
         """View information about a user / member."""
 
         await self.info_user_callback(interaction, user)
@@ -176,8 +171,8 @@ class Information(commands.Cog):
     async def info_user_callback(
         self,
         interaction: discord.Interaction,
-        user: Union[discord.Member, discord.User],
-    ):
+        user: discord.Member | discord.User,
+    ) -> None:
         """Send the information about the requested user / member."""
 
         application_emojis = await self.bot.fetch_application_emojis()
@@ -235,7 +230,7 @@ class Information(commands.Cog):
             embed.add_field(
                 name="Member information",
                 value=(
-                    f"Joined: {relative_dt(user.joined_at) if user.joined_at else 'Unknown'}\n"
+                    f"Joined: {relative_dt(user.joined_at) if user.joined_at else 'Unknown'}\n"  # noqa: E501
                     f"Roles: {', '.join(r.mention for r in reversed(user.roles[1:]))}"
                 ),
                 inline=False,

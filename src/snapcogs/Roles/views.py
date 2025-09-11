@@ -1,10 +1,15 @@
+from __future__ import annotations
+
 import logging
-from collections.abc import Iterable
 from secrets import token_hex
+from typing import TYPE_CHECKING
 
 import discord
 from discord import ButtonStyle, Color
 from discord.ui import Button, Item, Select, View
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 LOGGER = logging.getLogger(__name__)
 
@@ -12,7 +17,7 @@ LOGGER = logging.getLogger(__name__)
 class RolesCreateSelect(Select):
     """Select menu to select which roles will be available to select in the message."""
 
-    def __init__(self, roles: list[discord.Role]):
+    def __init__(self, roles: list[discord.Role]) -> None:
         options = [discord.SelectOption(label=role.name) for role in roles]
         self._roles = roles
         self.view: RolesCreateView
@@ -22,7 +27,7 @@ class RolesCreateSelect(Select):
             max_values=len(options),
         )
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction: discord.Interaction) -> None:
         selected_roles = [
             discord.utils.get(self._roles, name=value) for value in self.values
         ]
@@ -39,13 +44,13 @@ class RolesCreateView(View):
 
     selected_roles: list[discord.Role]
 
-    def __init__(self, roles: list[discord.Role], *, author: discord.Member):
+    def __init__(self, roles: list[discord.Role], *, author: discord.Member) -> None:
         super().__init__()
         self.author = author
         select = RolesCreateSelect(roles)
         self.add_item(select)
 
-    async def interaction_check(self, interaction: discord.Interaction):
+    async def interaction_check(self, interaction: discord.Interaction):  # noqa: ANN201
         """Only the command author can use the View."""
 
         return interaction.user == self.author
@@ -54,7 +59,9 @@ class RolesCreateView(View):
 class RolesSelect(Select):
     """Select menu with the list of assignable roles."""
 
-    def __init__(self, roles: Iterable[discord.Role], *, toggle: bool, custom_id: str):
+    def __init__(
+        self, roles: Iterable[discord.Role], *, toggle: bool, custom_id: str
+    ) -> None:
         roles = sorted(roles, reverse=True)
         options = [discord.SelectOption(label=role.name) for role in roles]
         self._roles = roles
@@ -65,7 +72,7 @@ class RolesSelect(Select):
             custom_id=custom_id,
         )
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction: discord.Interaction) -> None:
         """Edit the roles of the member, removing unselected roles
         and adding the selected ones
         """
@@ -115,9 +122,9 @@ class RolesView(View):
         self,
         roles: Iterable[discord.Role],
         *,
-        toggle=False,
+        toggle: bool = False,
         components_id: dict[str, str] | None = None,
-    ):
+    ) -> None:
         super().__init__(timeout=None)
 
         if components_id is None:
@@ -142,7 +149,7 @@ class RolesView(View):
         clear.callback = self.clear_callback
         self.add_item(clear)
 
-    async def clear_callback(self, interaction: discord.Interaction):
+    async def clear_callback(self, interaction: discord.Interaction) -> None:
         """Remove the roles in the select menu from the member."""
 
         member = interaction.user
@@ -151,9 +158,7 @@ class RolesView(View):
 
         if removed_roles:
             removed_roles_str = ", ".join(r.name for r in removed_roles)
-            LOGGER.debug(
-                f"Removing roles {removed_roles_str} " f"from {interaction.user}"
-            )
+            LOGGER.debug(f"Removing roles {removed_roles_str} from {interaction.user}")
             await member.remove_roles(*removed_roles)
 
         await interaction.response.send_message(
@@ -165,8 +170,8 @@ class RolesView(View):
         )
 
     async def on_error(
-        self, interaction: discord.Interaction, error: Exception, item: Item
-    ):
+        self, interaction: discord.Interaction, error: Exception, _: Item
+    ) -> None:
         if isinstance(error, KeyError):
             await interaction.response.send_message(
                 embed=discord.Embed(

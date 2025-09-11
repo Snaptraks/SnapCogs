@@ -57,7 +57,14 @@
     line-length = 88
 
 [tool.ruff.lint]
-    ignore = [  ]
+    ignore = [
+        "D",       # docstrings
+        "G004",    # logging-f-strings
+        "PLR2004", # magic-value-comparison
+        "S101",    # assert
+        "S311",    # suspicious-non-cryptographic-random-usage
+        "SLF001",  # private-member-access
+    ]
 
 [tool.uv.sources]
     snapcogs = { workspace = true }

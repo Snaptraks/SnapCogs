@@ -4,7 +4,7 @@ from discord import ui
 
 # confirm view
 class Confirm(ui.View):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.value = None
         self.interaction: discord.Interaction
@@ -14,7 +14,7 @@ class Confirm(ui.View):
         style=discord.ButtonStyle.green,
         emoji="\N{WHITE HEAVY CHECK MARK}",
     )
-    async def on_confirm(self, interaction: discord.Interaction, button: ui.Button):
+    async def on_confirm(self, interaction: discord.Interaction, _: ui.Button) -> None:
         self.interaction = interaction
         self.value = True
         self.stop()
@@ -24,7 +24,7 @@ class Confirm(ui.View):
         style=discord.ButtonStyle.gray,
         emoji="\N{CROSS MARK}",
     )
-    async def on_cancel(self, interaction: discord.Interaction, button: ui.Button):
+    async def on_cancel(self, interaction: discord.Interaction, _: ui.Button) -> None:
         self.interaction = interaction
         self.value = False
         self.stop()

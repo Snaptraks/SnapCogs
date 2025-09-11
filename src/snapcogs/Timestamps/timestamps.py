@@ -1,16 +1,20 @@
+from __future__ import annotations
+
 import itertools
 import typing
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime  # noqa: TC003
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import discord
 from dateutil.parser import ParserError, parse
 from discord import app_commands
 from discord.ext import commands
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from ..bot import Bot
 from .timezones import abbrevs_pytz
+
+if typing.TYPE_CHECKING:
+    from ..bot import Bot
 
 TZ_DATA = abbrevs_pytz()
 
@@ -37,7 +41,9 @@ class TimezoneTransformerError(app_commands.AppCommandError):
 
 
 class DatetimeTransformer(app_commands.Transformer):
-    cache = defaultdict(lambda: discord.utils.utcnow())
+    cache: typing.ClassVar[dict[int, datetime]] = defaultdict(
+        lambda: discord.utils.utcnow()
+    )
 
     async def transform(
         self, interaction: discord.Interaction, value: str, /
@@ -50,7 +56,7 @@ class DatetimeTransformer(app_commands.Transformer):
             dt = self.cache[interaction.user.id]
         return dt
 
-    async def autocomplete(
+    async def autocomplete(  # type: ignore[reportIncompatibleMethodOverride]
         self, interaction: discord.Interaction, value: str, /
     ) -> list[app_commands.Choice[str]]:
         dt = await self.transform(interaction, value)
@@ -62,22 +68,18 @@ class DatetimeTransformer(app_commands.Transformer):
 
 
 class TimezoneTransformer(app_commands.Transformer):
-    async def transform(
-        self, interaction: discord.Interaction, value: str, /
-    ) -> ZoneInfo:
+    async def transform(self, _: discord.Interaction, value: str, /) -> ZoneInfo:
         try:
             tz = ZoneInfo(value)
-        except ZoneInfoNotFoundError:
-            raise TimezoneTransformerError(value)
+        except ZoneInfoNotFoundError as e:
+            raise TimezoneTransformerError(value) from e
 
         return tz
 
-    async def autocomplete(
-        self, interaction: discord.Interaction, value: str, /
+    async def autocomplete(  # type: ignore[reportIncompatibleMethodOverride]
+        self, _: discord.Interaction, value: str, /
     ) -> list[app_commands.Choice[str]]:
-        possible_abbrevs = [
-            abbrev for abbrev in TZ_DATA.keys() if value.upper() in abbrev
-        ]
+        possible_abbrevs = [abbrev for abbrev in TZ_DATA if value.upper() in abbrev]
         possible_tz = list(
             itertools.chain(*[TZ_DATA[abbrev] for abbrev in possible_abbrevs])
         )
@@ -92,7 +94,7 @@ class Timestamps(commands.Cog):
         self.bot = bot
 
     def _make_timestamps_embed(
-        self, dt: datetime, style: typing.Optional[app_commands.Choice[str]] = None
+        self, dt: datetime, style: app_commands.Choice[str] | None = None
     ) -> discord.Embed:
         embed = discord.Embed(
             title="Timestamps",
@@ -103,10 +105,10 @@ class Timestamps(commands.Cog):
                 "box below the format of your choice."
             ),
         )
-        for s in _STYLES.keys():
+        for s in _STYLES:
             if style is not None and style.value != s:
                 continue
-            formatted_dt = discord.utils.format_dt(dt, style=s)  # type: ignore
+            formatted_dt = discord.utils.format_dt(dt, style=s)  # type: ignore[reportArgumentType]
             embed.add_field(name=formatted_dt, value=f"`{formatted_dt}`")
 
         return embed
@@ -117,7 +119,7 @@ class Timestamps(commands.Cog):
     async def now(
         self,
         interaction: discord.Interaction,
-        style: typing.Optional[app_commands.Choice[str]] = None,
+        style: app_commands.Choice[str] | None = None,
     ) -> None:
         """Create timestamps of now to send to get rich formatting."""
 
@@ -137,13 +139,13 @@ class Timestamps(commands.Cog):
     async def timestamp(
         self,
         interaction: discord.Interaction,
-        dt: app_commands.Transform[str, DatetimeTransformer],
-        tz: app_commands.Transform[str, TimezoneTransformer],
-        style: typing.Optional[app_commands.Choice[str]] = None,
+        dt: app_commands.Transform[datetime, DatetimeTransformer],
+        tz: app_commands.Transform[ZoneInfo, TimezoneTransformer],
+        style: app_commands.Choice[str] | None = None,
     ) -> None:
         """Create timestamps of the given time to send to get rich formatting."""
 
-        dt_tz = dt.replace(tzinfo=tz)  # type: ignore
+        dt_tz = dt.replace(tzinfo=tz)
 
         embed = self._make_timestamps_embed(dt_tz, style=style)
         await interaction.response.send_message(embed=embed)

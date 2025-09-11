@@ -28,18 +28,18 @@ class Fun(commands.Cog):
     @app_commands.command(name="8ball")
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.describe(question="What do you want to ask the Magic 8 Ball?")
-    async def _8ball(self, interaction: discord.Interaction, question: str):
+    async def _8ball(self, interaction: discord.Interaction, question: str) -> None:
         """Fortune-telling or advice seeking."""
 
         embed = discord.Embed(title="Ask the Magic 8 Ball").set_thumbnail(
-            url="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/8-Ball_Pool.svg/240px-8-Ball_Pool.svg.png"  # noqa: E501
+            url="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/8-Ball_Pool.svg/240px-8-Ball_Pool.svg.png"
         )
 
         await interaction.response.defer(thinking=True)
 
         r = random.randrange(50)
         if r != 0:
-            with open(COG_PATH / "8ball_answers.json", "r") as f:
+            with (COG_PATH / "8ball_answers.json").open() as f:
                 answers = json.load(f)
             _question = tuple(sorted(question))
             i = hash(_question) % len(answers)
@@ -71,7 +71,7 @@ class Fun(commands.Cog):
         interaction: discord.Interaction,
         member: discord.Member,
         text: str | None = None,
-    ):
+    ) -> None:
         """Bonk a member, and add a message!"""
 
         if member == member.guild.me:
@@ -85,7 +85,9 @@ class Fun(commands.Cog):
         )
 
     @bonk.error
-    async def bonk_error(self, interaction: discord.Interaction, error: BaseException):
+    async def bonk_error(
+        self, interaction: discord.Interaction, error: BaseException
+    ) -> None:
         """Error handler for the bonk command."""
 
         if isinstance(
@@ -113,7 +115,9 @@ class Fun(commands.Cog):
     @app_commands.command()
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.describe(member="Member to lick.")
-    async def lick(self, interaction: discord.Interaction, member: discord.Member):
+    async def lick(
+        self, interaction: discord.Interaction, member: discord.Member
+    ) -> None:
         """Lick a member! It's not as lewd as it sounds..."""
 
         _bytes = await asyncio.to_thread(
@@ -127,7 +131,9 @@ class Fun(commands.Cog):
     @app_commands.command()
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.describe(member="Member for Kirby to eat.")
-    async def kirby(self, interaction: discord.Interaction, member: discord.Member):
+    async def kirby(
+        self, interaction: discord.Interaction, member: discord.Member
+    ) -> None:
         """Feed a member to Kirby!"""
 
         _bytes = await asyncio.to_thread(
@@ -138,7 +144,7 @@ class Fun(commands.Cog):
 
         await interaction.response.send_message(file=file)
 
-    def _assemble_8ball_image(self, avatar_bytes) -> io.BytesIO:
+    def _assemble_8ball_image(self, avatar_bytes: io.BytesIO) -> io.BytesIO:
         # needed files
         avatar = Image.open(avatar_bytes)
         template = Image.open(COG_PATH / "8ball_filter.png")
@@ -159,7 +165,9 @@ class Fun(commands.Cog):
 
         return _bytes
 
-    def _assemble_bonk_image(self, avatar_bytes: io.BytesIO, text=None) -> io.BytesIO:
+    def _assemble_bonk_image(
+        self, avatar_bytes: io.BytesIO, text: str | None = None
+    ) -> io.BytesIO:
         avatar = Image.open(avatar_bytes)
         template = Image.open(COG_PATH / "bonk_template.png")
 
@@ -222,12 +230,12 @@ class Fun(commands.Cog):
 
         mask = Image.new("RGBA", size)
         draw = ImageDraw.Draw(mask)
-        draw.ellipse((0, 0) + size, fill=(0, 0, 0, 255))
+        draw.ellipse((0, 0, *size), fill=(0, 0, 0, 255))
         avatar = ImageOps.fit(avatar, mask.size)
 
         frames: list[Image.Image] = []
-        for frame in ImageSequence.Iterator(lick_gif):
-            frame = frame.convert("RGBA")
+        for _frame in ImageSequence.Iterator(lick_gif):
+            frame = _frame.convert("RGBA")
             box = (frame.size[0] - frame.size[1] - 50, 0, *frame.size)
             frame = frame.crop(box=box)
             base = Image.new("RGBA", frame.size)

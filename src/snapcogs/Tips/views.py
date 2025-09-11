@@ -12,7 +12,7 @@ class TipCreate(ui.Modal, title="Tip Creation"):
         style=discord.TextStyle.paragraph,
     )
 
-    async def on_submit(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction: discord.Interaction) -> None:
         await interaction.response.defer()
 
 
