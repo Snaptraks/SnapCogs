@@ -20,6 +20,9 @@ LOGGER = logging.getLogger(__name__)
 
 
 class Bot[**BotP](commands.Bot):
+    # Suppress error on the User attribute being None since it fills up later
+    user: discord.ClientUser  # type: ignore[reportIncompatibleMethodOverride]
+
     def __init__(self: Self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
         self.db_name = kwargs.get("db_name")
         self.permissions = kwargs.get("permissions", discord.Permissions.text())
