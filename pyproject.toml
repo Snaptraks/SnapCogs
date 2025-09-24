@@ -27,7 +27,7 @@
     name = "snapcogs"
     readme = { file = "README.md", content-type = "text/markdown" }
     requires-python = ">=3.12"
-    version = "2025.09.08"
+    version = "2025.09.24"
 
 [project.urls]
     "Bug Reports" = "https://github.com/Snaptraks/SnapCogs/issues"
