@@ -402,7 +402,7 @@ wheels = [
 
 [[package]]
 name = "pint"
-version = "0.25"
+version = "0.25.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "flexcache" },
@@ -410,9 +410,9 @@ dependencies = [
     { name = "platformdirs" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5a/cb/e6ffaf3d019e8501b1264dac529bf829ac2f1fe1d488cfcf67f1fccadacf/pint-0.25.tar.gz", hash = "sha256:22911a30d682ee0540d656571c19a7b1806ce00b2be88a16f67218108b7b8cc2", size = 253010, upload-time = "2025-08-15T19:49:12.72Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/07/ff/7d56452e73dd7cb93ee9ddc3532e9fa31abfd25a582c68bf71868b3e7ae9/pint-0.25.1.tar.gz", hash = "sha256:34e6f89bfbfca94f29bde65c9ea42c1c56e05426692c655a3ee6f3ca2a92d252", size = 254542, upload-time = "2025-11-01T11:29:38.113Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/76/cc/c528311d798e22ec884b816e8aa2989e0f1f28cdc8e5969e2be5f10bce85/pint-0.25-py3-none-any.whl", hash = "sha256:cc20ae3dff010b9bbea41fb80c2de008f683cc83512cea73633d55aead80aa1e", size = 305462, upload-time = "2025-08-15T19:49:11.083Z" },
+    { url = "https://files.pythonhosted.org/packages/05/32/2f6a3e6b073f16f88a133bf50adb361cd714621e582191e03c0705307c8b/pint-0.25.1-py3-none-any.whl", hash = "sha256:b13dc42d0effa2d98b621b06eb0f2990d262c655c8893f6d40a74c334f9aa6b4", size = 306831, upload-time = "2025-11-01T11:29:36.972Z" },
 ]
 
 [[package]]
