@@ -532,7 +532,7 @@ wheels = [
 
 [[package]]
 name = "snapcogs"
-version = "2025.9.24"
+version = "2026.2.5"
 source = { editable = "." }
 dependencies = [
     { name = "aiosqlite" },
@@ -571,7 +571,7 @@ dev = [
 requires-dist = [
     { name = "aiosqlite", specifier = ">=0.21" },
     { name = "beautifulsoup4", marker = "extra == 'horoscope'", specifier = ">=4.9.3" },
-    { name = "discord-py", specifier = ">=2.6.3" },
+    { name = "discord-py", specifier = ">=2.6.3,<3" },
     { name = "pillow", marker = "extra == 'fun'", specifier = ">=11.3.0" },
     { name = "pint", marker = "extra == 'measurements'", specifier = ">=0.19" },
     { name = "python-dateutil", marker = "extra == 'timestamps'", specifier = ">=2.0" },

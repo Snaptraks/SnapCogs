@@ -3,6 +3,7 @@ import io
 import json
 import logging
 import random
+import textwrap
 from pathlib import Path
 
 import discord
@@ -24,6 +25,21 @@ class Fun(commands.Cog):
 
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
+
+        self.mock_context_menu = app_commands.ContextMenu(
+            name="Mock Message",
+            callback=self.mock_callback,
+            allowed_installs=app_commands.AppInstallationType(
+                guild=True,
+                user=True,
+            ),
+            allowed_contexts=app_commands.AppCommandContext(
+                guild=True,
+                dm_channel=True,
+                private_channel=True,
+            ),
+        )
+        self.bot.tree.add_command(self.mock_context_menu)
 
     @app_commands.command(name="8ball")
     @app_commands.allowed_installs(guilds=True, users=True)
@@ -81,7 +97,7 @@ class Fun(commands.Cog):
 
         await interaction.response.send_message(
             content=content,
-            file=await self.create_bonk_file(member, text),
+            file=await self._create_bonk_file(member, text),
         )
 
     @bonk.error
@@ -97,20 +113,6 @@ class Fun(commands.Cog):
 
         else:
             interaction.extras["error_handled"] = False
-
-    async def create_bonk_file(
-        self, member: discord.Member, text: str | None = None
-    ) -> discord.File:
-        """Common funtion to fetch the member avatar, and create the file to send."""
-
-        avatar = io.BytesIO(await member.display_avatar.read())
-        if member == member.guild.me:
-            # self bonk
-            _bytes = await asyncio.to_thread(self._assemble_self_bonk_image, avatar)
-        else:
-            _bytes = await asyncio.to_thread(self._assemble_bonk_image, avatar, text)
-
-        return discord.File(_bytes, filename="bonk.png")
 
     @app_commands.command()
     @app_commands.allowed_installs(guilds=True, users=True)
@@ -144,6 +146,32 @@ class Fun(commands.Cog):
 
         await interaction.response.send_message(file=file)
 
+    @app_commands.command()
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.describe(content="Message to mock.")
+    async def mock(self, interaction: discord.Interaction, content: str) -> None:
+        """Mock something someone said."""
+
+        await self._mock(interaction, content)
+
+    async def mock_callback(
+        self, interaction: discord.Interaction, message: discord.Message
+    ) -> None:
+        """Mock a message.
+
+        This is a message context menu.
+        """
+        await self._mock(interaction, message.content)
+
+    async def _mock(self, interaction: discord.Interaction, content: str) -> None:
+        """Generic callback for the mock slash command and context menu."""
+
+        mocked = self._mock_text(content)
+        _bytes = await asyncio.to_thread(self._assemble_mock_image, (mocked))
+        file = discord.File(_bytes, filename="mock.png")
+
+        await interaction.response.send_message(file=file, ephemeral=True)
+
     def _assemble_8ball_image(self, avatar_bytes: io.BytesIO) -> io.BytesIO:
         # needed files
         avatar = Image.open(avatar_bytes)
@@ -164,6 +192,18 @@ class Fun(commands.Cog):
         _bytes.seek(0)
 
         return _bytes
+
+    async def _create_bonk_file(
+        self, member: discord.Member, text: str | None = None
+    ) -> discord.File:
+        avatar = io.BytesIO(await member.display_avatar.read())
+        if member == member.guild.me:
+            # self bonk
+            _bytes = await asyncio.to_thread(self._assemble_self_bonk_image, avatar)
+        else:
+            _bytes = await asyncio.to_thread(self._assemble_bonk_image, avatar, text)
+
+        return discord.File(_bytes, filename="bonk.png")
 
     def _assemble_bonk_image(
         self, avatar_bytes: io.BytesIO, text: str | None = None
@@ -270,5 +310,61 @@ class Fun(commands.Cog):
 
         edited = io.BytesIO()
         new.save(edited, format="png")
+        edited.seek(0)
+        return edited
+
+    def _mock_text(self, text: str) -> str:
+        mocked_text: list[str] = []
+
+        offset: int = 0
+        for i, char in enumerate(text):
+            if not char.isalpha():
+                offset += 1
+
+            if (i + offset) % 2:
+                mocked_text.append(char.lower())
+
+            else:
+                mocked_text.append(char.upper())
+
+        return "".join(mocked_text)
+
+    def _assemble_mock_image(self, text: str) -> io.BytesIO:
+        template = Image.open(COG_PATH / "mock_template.png")
+        draw = ImageDraw.Draw(template)
+        font = ImageFont.truetype("impact.ttf", 55)
+        mx, my = (416, 75)  # middle
+        text_kwargs = {
+            "font": font,
+            "anchor": "mm",
+            "align": "center",
+            "stroke_width": 2,
+        }
+
+        lines: int = 1
+        while True:
+            wrapped_text = textwrap.wrap(text, width=len(text) // lines + 5)
+            left, _, right, _ = draw.multiline_textbbox(
+                (mx, my), "\n".join(wrapped_text), **text_kwargs
+            )
+            if (right - left) > template.size[0]:
+                lines += 1
+            else:
+                break
+
+            if lines > 3:
+                my += 40
+
+        draw.multiline_text(
+            (mx, my),
+            "\n".join(wrapped_text),
+            fill=(255, 255, 255),
+            stroke_fill=(0, 0, 0),
+            **text_kwargs,
+        )
+        template.thumbnail(MAX_IMG_SIZE)
+
+        edited = io.BytesIO()
+        template.save(edited, format="png")
         edited.seek(0)
         return edited

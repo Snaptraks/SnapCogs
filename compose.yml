@@ -1,0 +1,15 @@
+services:
+  bot:
+    build: .
+    image: testbot:latest
+    container_name: testbot
+    volumes:
+      - testbot-db:/bot/tests/db
+    develop:
+      watch:
+        - action: restart
+          path: ./src
+          target: /bot/src
+
+volumes:
+  testbot-db:
