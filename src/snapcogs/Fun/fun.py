@@ -170,7 +170,7 @@ class Fun(commands.Cog):
         _bytes = await asyncio.to_thread(self._assemble_mock_image, (mocked))
         file = discord.File(_bytes, filename="mock.png")
 
-        await interaction.response.send_message(file=file, ephemeral=True)
+        await interaction.response.send_message(file=file)
 
     def _assemble_8ball_image(self, avatar_bytes: io.BytesIO) -> io.BytesIO:
         # needed files
