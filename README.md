@@ -197,6 +197,22 @@ Fortune-telling or advice seeking. Ask the Magic 8 Ball a yes-or-no question, an
 
 Bonk a member, and add a message! This command creates an image with the member's profile picture and the bonk meme.
 
+### ``/lick <member>``
+
+Lick a member! It's not as lewd as it sounds... This will create a gif where Patrick Star licks the member's protile picture.
+
+### ``/kirby <member>``
+
+Feed a member to Kirby! This command puts the member's profile picture inside Kirby's mouth.
+
+### ``/mock <message>``
+
+Mock something someone said. This will turn the text with AlTeRnAtInG cApS and put it on the Mocking Spongebob meme.
+
+### ``Message > Mock Message``
+
+Message context menu similar to the ``/mock`` command.
+
 ## Horoscope
 
 ### ``/horoscope <zodiac_sign>``
