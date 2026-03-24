@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import sys
 from importlib.metadata import version
+from textwrap import dedent
 from typing import TYPE_CHECKING
 
 import aiohttp
@@ -65,17 +66,21 @@ class Bot[**BotP](commands.Bot):
         oauth_url = discord.utils.oauth_url(self.user.id, permissions=self.permissions)
         py_version = sys.version_info
         LOGGER.info(
-            "Login Info\n"
-            f"Logged in as {self.user.name} (ID:{self.user.id})\n"
-            "--------\n"
-            "Versions:\n"
-            f"\tPython: {py_version.major}.{py_version.minor}.{py_version.micro}\n"
-            f"\tdiscord.py: {discord.__version__}\n"
-            f"\tSnapCogs: {version('snapcogs')}\n"
-            "--------\n"
-            f"Use this link to invite {self.user.name}:\n"
-            f"{oauth_url}\n"
-            "--------\n"
+            dedent(
+                f"""
+                Login Info
+                Logged in as {self.user.name} (ID:{self.user.id})
+                --------
+                Versions:
+                    Python: {py_version.major}.{py_version.minor}.{py_version.micro}
+                    discord.py: {discord.__version__}
+                    SnapCogs: {version("snapcogs")}
+                --------
+                Use this link to invite {self.user.name}:
+                {oauth_url}
+                --------
+                """
+            )
         )
 
     async def on_command_error(
