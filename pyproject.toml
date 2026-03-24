@@ -33,6 +33,11 @@
     "Bug Reports" = "https://github.com/Snaptraks/SnapCogs/issues"
     Documentation = "https://github.com/Snaptraks/SnapCogs/blob/master/README.md"
 
+[dependency-groups]
+    dev = [
+        "rich>=13.9.4",
+    ]
+
 [project.optional-dependencies]
     all = [
         "snapcogs[fun,horoscope,measurements,timestamps]",
@@ -68,8 +73,3 @@
 
 [tool.uv.sources]
     snapcogs = { workspace = true }
-
-[dependency-groups]
-    dev = [
-        "rich>=13.9.4",
-    ]
