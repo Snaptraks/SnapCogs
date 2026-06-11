@@ -46,7 +46,7 @@
         "pillow>=12.1.1",
     ]
     horoscope = [
-        "beautifulsoup4>=4.9.3",
+        "beautifulsoup4>=4.15.0",
     ]
     measurements = [
         "pint>=0.19",
