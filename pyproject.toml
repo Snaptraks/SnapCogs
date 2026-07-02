@@ -43,7 +43,7 @@
         "snapcogs[fun,horoscope,measurements,timestamps]",
     ]
     fun = [
-        "pillow>=12.1.1",
+        "pillow>=12.3.0",
     ]
     horoscope = [
         "beautifulsoup4>=4.15.0",
