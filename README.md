@@ -73,7 +73,7 @@ class MyBot(commands.Bot):
         startup_extensions = [
             "my_cogs_folder.SomeCog",
             "snapcogs.Admin",
-            "snapcogs.Poll",
+            "snapcogs.Fun",
         ]
         for extension in startup_extensions:
             await self.load_extension(extension)
@@ -93,7 +93,7 @@ async def main():
     startup_extensions = [
         "my_cogs_folder.SomeCog",
         "snapcogs.Admin",
-        "snapcogs.Poll",
+        "snapcogs.Fun",
     ]
     bot = Bot(..., startup_extensions=startup_extensions)
     async with bot:
